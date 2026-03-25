@@ -222,4 +222,6 @@ db_local_embeddings/
 db_imgs/
 db_imgs_alfadocs/
 test_video/
+.env
+config.py
 
