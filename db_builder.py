@@ -4,6 +4,7 @@ import requests
 import numpy as np
 from insightface.app import FaceAnalysis
 from cam_recognition import cam_recognition
+from config import API_URL, API_KEY, PRACTICE_ID, ARCHIVE_ID
 
 # questa cosa non si può fare perchè l'endpoint non colleziona le immagini di profilo
 def collect_imgs_from_alfadocs(db_directory):
@@ -121,11 +122,6 @@ if __name__ == "__main__":
     # destination_directory = 'db_embeddings_from_alfadocs'
     # collect_imgs_from_alfadocs(db_directory)
 
-    API_URL = 'https://app.alfadocs.com/api/v1'
-    API_KEY = '3XQ2wWULlIGtCKphqzKmdoSxOnQbA37z'
-
-    PRACTICE_ID = 36053
-    ARCHIVE_ID = 70193
 
     db_directory = 'db_imgs'
     destination_directory = 'db_local_embeddings'
