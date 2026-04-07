@@ -99,7 +99,7 @@ def build_embedding_database(db_directory, destination_directory):
                 embeddings.append(emb)
                 labels.append(human_dir)
 
-                print(f"[OK] --- Processed image: {img_path}, label: {human_dir}")
+                print(f"[OK] ---> Processed image: {img_path}, label: {human_dir}")
 
     embeddings = np.array(embeddings)
     labels = np.array(labels)
