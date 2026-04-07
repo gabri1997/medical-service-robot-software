@@ -41,6 +41,34 @@ def find_today_appointment(appointments, patient_id):
         return None, None
     return today_app, timing
 
+def change_apointment_status(appointment, timing):
+    if appointment is None:
+        print("No appointment to update.")
+        return
+    
+    headers = {
+        'X-Api-Key': API_KEY,
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+    }
+
+    status_mapping = {
+        'on_time': 'waiting',
+    }
+
+    new_status = status_mapping.get(timing, 'scheduled')
+    update_url = f"{API_URL}/practices/{PRACTICE_ID}/archives/{ARCHIVE_ID}/appointments/{appointment[0]['id']}"
+    
+    payload = {
+        "status": new_status
+    }
+
+    response = requests.put(update_url, json=payload, headers=headers)
+    
+    if response.status_code == 200:
+        print(f"Appointment {appointment[0]['id']} status updated to {new_status}.")
+    else:
+        print(f"Failed to update appointment {appointment[0]['id']} status. Status code: {response.status_code}")
 
 def fetch_api_patient_data(API_URL, API_KEY, PRACTICE_ID, ARCHIVE_ID, patient_id):
 
@@ -88,3 +116,4 @@ if __name__ == "__main__":
     patient_appointments = fetch_api_patient_data(API_URL, API_KEY, PRACTICE_ID, ARCHIVE_ID, patient_id)
     # Assumo nello scrivere il codice che ci siamo un solo appuntamento al giorno per ogni paziente
     today_appointment, timing = find_today_appointment(patient_appointments, patient_id)
+    change_apointment_status(today_appointment, timing)
