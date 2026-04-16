@@ -5,6 +5,7 @@ from text_recognition import recognizer, text_normalization
 from cam_recognition import cam_recognition
 from local_db_builder import db_setup, get_patients_from_API, populate_db
 from faster_whisper import WhisperModel
+from insightface.app import FaceAnalysis
 import cv2
 import os
 
@@ -57,9 +58,11 @@ if __name__ == "__main__":
     if not os.path.exists(destination_directory):
         build_embedding_database(db_directory, destination_directory) # servirà una logica per aggiornare il database quando ci sono nuovi pazienti o nuove immagini
     
-    patient_id = cam_recognition(destination_directory, cap, debug_frames)
+    app = FaceAnalysis(name="buffalo_l", providers=["CPUExecutionProvider"])
+    patient_id, best_score = cam_recognition(app, destination_directory, cap, debug_frames)
     cap.release()
-    if patient_id is None:
+    # qui sarà da capire che soglia mettere o se il ragionamento è corretto
+    if patient_id is None or best_score < 0.5: # se non riesco a riconoscere il paziente con la webcam, o se il punteggio è troppo basso, faccio il fallback con il vocale
         print("Non sono riuscito a riconoscere il paziente, fallback con il vocale ...")
         audio_pth = os.path.join(audio_folder, 'gabriele_rosati.mp3')
         model = WhisperModel("small", device="cpu", compute_type="int8")

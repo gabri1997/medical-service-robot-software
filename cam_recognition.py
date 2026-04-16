@@ -7,7 +7,22 @@ from insightface.app import FaceAnalysis
 def cosine_similarity(a, b):
         return np.dot(a, b) / (np.linalg.norm(a) * np.linalg.norm(b))
 
-def cam_recognition(db_embeddings_path, cap, debug_frames):
+
+# TODO
+"""
+Voglio:
+primo frame valido?
+o miglior frame tra N?
+Quando devo fermarmi?
+dopo N frame?
+dopo un certo score?
+dopo timeout?
+Se ho più facce nello stesso frame:
+quale scelgo?
+"""
+
+
+def cam_recognition(app, db_embeddings_path, cap, debug_frames):
 
     if not os.path.exists(db_embeddings_path):
         print(f"Database embeddings not found at {db_embeddings_path}. Please build the database first.")
@@ -19,12 +34,21 @@ def cam_recognition(db_embeddings_path, cap, debug_frames):
     db_embeddings = embedding['embeddings']
     db_labels = embedding['labels']
 
-    threshold = 0.5 # questa va capita
 
     # qui calcolo live gli embedding della webcam e li confronto con quelli del database, se la similarità è sopra la soglia allora è un match
-    app = FaceAnalysis(name="buffalo_l", providers=["CPUExecutionProvider"])
     app.prepare(ctx_id=0, det_size=(640, 640))
 
+    frames_best_label = None
+    frames_best_score = 0.0
+    threshold = 0.0
+
+
+    # qui il concetto è ritornare il migliore fra tutti i frames senza utilizzare una soglia 
+    # poi vorrei utilizzare una soglia invece per far partire il riconoscimento da speech, se ad esempio il volto riconosciuto ha confidence bassa allora parte
+    # devo testare la soglia sulla base dei dati del mio database e volendo :
+    # soglia alta → accettazione immediata
+    # soglia intermedia → candidato ambiguo, chiedi voce
+    # soglia bassa → unknown
 
     while True:
         ret, frame = cap.read()
@@ -49,6 +73,10 @@ def cam_recognition(db_embeddings_path, cap, debug_frames):
             else:
                 text = "Unknown"
 
+            if best_score > frames_best_score:
+                frames_best_score = best_score
+                frames_best_label = best_label
+
             # la best label dipende dal nome della cartella in cui ho messo il gt, in questo caso deve essere il patient_id, così poi posso fare la chiamata alle API con quello stesso patient_id per recuperare i dati del paziente riconosciuto
             print(f"Best match: {best_label} with score {best_score:.2f}")
 
@@ -63,10 +91,11 @@ def cam_recognition(db_embeddings_path, cap, debug_frames):
             os.makedirs(debug_frames)
 
         cv2.imwrite(os.path.join(debug_frames, "debug_frame.jpg"), frame)
-        cap.release()
-        cv2.destroyAllWindows()
+    
+    cap.release()
+    cv2.destroyAllWindows()
 
-        return best_label, best_score
+    return frames_best_label, frames_best_score
 
 
 
@@ -74,7 +103,7 @@ if __name__ == "__main__":
 
     db_embeddings_path = os.path.join('db_local_embeddings')
     cap = cv2.VideoCapture("test_video2.mp4")
-
-    best_label, best_score = cam_recognition(db_embeddings_path, cap, debug_frames="debug_frames")
+    app = FaceAnalysis(name="buffalo_l", providers=["CPUExecutionProvider"])
+    best_label, best_score = cam_recognition(app, db_embeddings_path, cap, debug_frames="debug_frames")
     print(f"Best match: {best_label} with score {best_score:.2f}")      
     
