@@ -1,9 +1,10 @@
 import os
 from config import API_URL, API_KEY, PRACTICE_ID, ARCHIVE_ID
 from fetch_api_patient_data import fetch_api_patient_data, find_today_appointment
-from db_builder import build_embedding_database
+from img_db_builder import build_embedding_database
 from text_recognition import recognizer, text_normalization
 from cam_recognition import cam_recognition
+from local_db_builder import db_setup, test_connection, get_patients_from_API, populate_db
 import cv2
 
 
@@ -24,9 +25,23 @@ if __name__ == "__main__":
 
     db_directory = 'db_imgs'
     destination_directory = 'db_local_embeddings'
+    db_file = 'patient_data.db'
     debug_frames = 'debug_frames'
     video_folder = 'test_video'
     audio_pth = 'gabriele_rosati.mp3'
+
+    print("Inizio il processo di riconoscimento del paziente ...")
+    print("Creo il db locale se non esiste già ...")
+
+    if not os.path.exists(db_file):
+        print("Database non trovato, procedo con la creazione del database ...")
+        connection, cursor = db_setup()
+        patients_list = get_patients_from_API(API_KEY, PRACTICE_ID, ARCHIVE_ID)
+        populate_db(connection, cursor, patients_list)
+        cursor.close()
+        connection.close()
+    else:
+        print("Database già esistente, procedo con il riconoscimento del paziente ...")
 
     print("Procedo con il riconoscimento vocale ...")
         

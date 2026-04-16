@@ -10,7 +10,6 @@ def recognizer(audio_pth):
     audio_path = os.path.join(os.path.dirname(__file__), audio_pth)
     segments, info = model.transcribe(audio_path, beam_size=5)
     
-
     return segments
 
 def text_normalization(text):
