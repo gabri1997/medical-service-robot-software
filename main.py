@@ -28,7 +28,7 @@ if __name__ == "__main__":
     db_file = 'patient_data.db'
     debug_frames = 'debug_frames'
     video_folder = 'test_video'
-    audio_pth = 'gabriele_rosati.mp3'
+    audio_folder = 'audio'
 
     print("Inizio il processo di riconoscimento del paziente ...")
     print("Creo il db locale se non esiste già ...")
@@ -44,7 +44,8 @@ if __name__ == "__main__":
         print("Database già esistente, procedo con il riconoscimento del paziente ...")
 
     print("Procedo con il riconoscimento vocale ...")
-        
+    
+    audio_pth = os.path.join(audio_folder, 'gabriele_rosati.mp3')
     segments = recognizer(audio_pth=audio_pth)
     segments = list(segments) # converto in lista per poter iterare più volte sui segmenti
     print('Ecco il nome del paziente che ho riconosciuto: ')
