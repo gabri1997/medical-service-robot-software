@@ -79,3 +79,4 @@ if __name__ == '__main__':
     # test_connection() # questa funzione serve solo per testare se la connessione al db funziona e se riesco a creare la tabella e inserire dati, la commento dopo averla testata
     populate_db(connection, cursor, get_patients_from_API(API_KEY, PRACTICE_ID, ARCHIVE_ID)) # questa funzione serve per popolare il db con i dati dei pazienti ottenuti dall'API, la implemento dopo
     connection.close()
+    print("Processo completato, database chiuso.")
