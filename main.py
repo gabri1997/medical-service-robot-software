@@ -61,3 +61,4 @@ if __name__ == "__main__":
   
     patient_appointments = fetch_api_patient_data(API_URL, API_KEY, PRACTICE_ID, ARCHIVE_ID, patient_id)
     today_appointment, timing = find_today_appointment(patient_appointments, patient_id)
+    print(f"Appuntamento di oggi per il paziente {patient_id}: {today_appointment} alle {timing}")
