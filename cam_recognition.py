@@ -21,7 +21,7 @@ def cam_recognition(db_embeddings_path, cap, debug_frames):
 
     threshold = 0.5 # questa va capita
 
-    # qui calcolo live gli embedding della webcam e li confronto con quelli del database, se la similarità è sotto la soglia allora è un match
+    # qui calcolo live gli embedding della webcam e li confronto con quelli del database, se la similarità è sopra la soglia allora è un match
     app = FaceAnalysis(name="buffalo_l", providers=["CPUExecutionProvider"])
     app.prepare(ctx_id=0, det_size=(640, 640))
 
