@@ -44,7 +44,7 @@ def find_today_appointment(appointments, patient_id):
 def change_apointment_status(appointment, timing):
     if appointment is None:
         print("No appointment to update.")
-        return
+        return False
     
     headers = {
         'X-Api-Key': API_KEY,
@@ -52,23 +52,30 @@ def change_apointment_status(appointment, timing):
         'Content-Type': 'application/json'
     }
 
+    # qua sarà da capire come gestire i valori dei vari stati : "absent" "waiting" "in_care" "done" "cancelled" "confirmed"
     status_mapping = {
         'on_time': 'waiting',
+        'late': 'waiting',
+        'too_early': 'waiting'
     }
 
     new_status = status_mapping.get(timing, 'scheduled')
+   
     update_url = f"{API_URL}/practices/{PRACTICE_ID}/archives/{ARCHIVE_ID}/appointments/{appointment[0]['id']}"
     
+
     payload = {
-        "status": new_status
+        "state": new_status
     }
 
-    response = requests.put(update_url, json=payload, headers=headers)
+    response = requests.patch(update_url, json=payload, headers=headers)
     
     if response.status_code == 200:
         print(f"Appointment {appointment[0]['id']} status updated to {new_status}.")
+        return True
     else:
         print(f"Failed to update appointment {appointment[0]['id']} status. Status code: {response.status_code}")
+        return False
 
 def fetch_api_patient_data(API_URL, API_KEY, PRACTICE_ID, ARCHIVE_ID, patient_id):
 
@@ -104,16 +111,23 @@ def fetch_api_patient_data(API_URL, API_KEY, PRACTICE_ID, ARCHIVE_ID, patient_id
         return
 
     appointments = response.json()
-    print(f"Found {appointments['count']} appointments.")
-    patient_appointments = [appt for appt in appointments["data"] if appt["patientId"] == patient_id]
+    patient_appointments = [appt for appt in appointments["data"] if str(appt["patientId"]) == str(patient_id)]
     print(f"Patient {patient_id} has {len(patient_appointments)} appointments.")
     return patient_appointments
 
 def execute_fetch_and_update(patient_id):
     patient_appointments = fetch_api_patient_data(API_URL, API_KEY, PRACTICE_ID, ARCHIVE_ID, patient_id)
     today_appointment, timing = find_today_appointment(patient_appointments, patient_id)
-    change_apointment_status(today_appointment, timing)
     print(f"Appuntamento di oggi per il paziente {patient_id}: {today_appointment} alle {timing}")
+    updated = change_apointment_status(today_appointment, timing)
+    if not updated:
+        print("Non sono riuscito ad aggiornare lo stato dell'appuntamento.")
+        return
+    # dovrei rifare il fetch dei dati del paziente per vedere se lo stato dell'appuntamento è stato aggiornato correttamente
+    patient_appointments = fetch_api_patient_data(API_URL, API_KEY, PRACTICE_ID, ARCHIVE_ID, patient_id)
+    today_appointment, timing = find_today_appointment(patient_appointments, patient_id)
+    print(f"Appuntamento con stato aggiornato di oggi per il paziente {patient_id}: {today_appointment} alle {timing}")
+
 
 if __name__ == "__main__":
     

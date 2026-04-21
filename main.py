@@ -1,4 +1,3 @@
-from config import API_URL, API_KEY, PRACTICE_ID, ARCHIVE_ID
 from fetch_api_patient_data import execute_fetch_and_update
 from img_db_builder import build_embedding_database
 from text_recognition import execute_text_recognition
@@ -9,23 +8,26 @@ from insightface.app import FaceAnalysis
 import cv2
 import os
 
+from config import FACE_RECOGNITION_THRESHOLD
 
 """
 Flow:
     - The patient arrives at the system.
     - Face recognition is attempted.
     - If the face is recognized with high confidence, the corresponding patient_id is retrieved.
-    - If the face is not recognized or multiple candidates are detected, the system asks for the patient’s name and surname.
+    - If the face is not recognized (or the confidence score is too low), the system asks for the patient’s name and surname.
     - The spoken input is transcribed into text.
     - The text is normalized to a consistent format.
     - The system searches the local database using a similarity metric (e.g., Levenshtein distance).
-    - One or more candidate patients are retrieved.
-    - If necessary, face recognition is used again to disambiguate between candidates.
     - Once the correct patient_id is identified, an API call is made to retrieve the patient’s appointments.
-
 """
 
-
+# TODO:
+# - capire come settare i vari stati degli appuntamenti a seconda del momento in cui arriva il paziente
+# - non si gestisce il caso in cui ci sia più di 1 appuntamento per lo stesso paziente nello stesso giorno, in quel caso bisogna capire come fare a distinguere gli appuntamenti, ad esempio chiedendo al paziente a che ora ha l'appuntamento o facendo un confronto tra l'orario dell'appuntamento e l'orario di arrivo del paziente
+# - frame della videocamera: se uso tutti i frame è troppo lento
+# - capire se va bene usare la levenshtein distance come metrica di similarità testuale
+# - capire se serve disambiguare i pazienti se fallisce il riconoscimento facciale e quello vocale da piu risultati
 if __name__ == "__main__":
 
     BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -45,20 +47,21 @@ if __name__ == "__main__":
         print("Database già esistente, procedo con il riconoscimento del paziente ...")
 
     
-    video_path = os.path.join(video_folder, 'test_video2.mp4')
+    video_path = os.path.join(video_folder, 'test_video.mp4')
     cap = cv2.VideoCapture(video_path)
     
     # costruisco il database di embedding a partire dalle immagini dei pazienti solo se non è già stato costruito
     if not os.path.exists(destination_directory):
         build_embedding_database(db_directory, destination_directory) # servirà una logica per aggiornare il database quando ci sono nuovi pazienti o nuove immagini
     
+    # Bisogna capire come gestire i frames perchè se li uso tutti ci metto troppo tempo 
     app = FaceAnalysis(name="buffalo_l", providers=["CPUExecutionProvider"])
     patient_id, best_score = cam_recognition(app, destination_directory, cap, debug_frames)
     cap.release()
 
-    patient_id = None
+    # patient_id = None # per debuggare la parte di text recognition, forzo il riconoscimento facciale a non funzionare, così posso testare la parte di riconoscimento vocale e di similarità testuale
     # qui sarà da capire che soglia mettere o se il ragionamento è corretto
-    if patient_id is None or best_score < 0.5: # se non riesco a riconoscere il paziente con la webcam, o se il punteggio è troppo basso, faccio il fallback con il vocale
+    if patient_id is None or best_score < FACE_RECOGNITION_THRESHOLD: # se non riesco a riconoscere il paziente con la webcam, o se il punteggio è troppo basso, faccio il fallback con il vocale
         print("Non sono riuscito a riconoscere il paziente, fallback con il vocale ... come ti chiami?")
 
         model = WhisperModel("small", device="cpu", compute_type="int8")
