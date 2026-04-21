@@ -109,11 +109,14 @@ def fetch_api_patient_data(API_URL, API_KEY, PRACTICE_ID, ARCHIVE_ID, patient_id
     print(f"Patient {patient_id} has {len(patient_appointments)} appointments.")
     return patient_appointments
 
+def execute_fetch_and_update(patient_id):
+    patient_appointments = fetch_api_patient_data(API_URL, API_KEY, PRACTICE_ID, ARCHIVE_ID, patient_id)
+    today_appointment, timing = find_today_appointment(patient_appointments, patient_id)
+    change_apointment_status(today_appointment, timing)
+    print(f"Appuntamento di oggi per il paziente {patient_id}: {today_appointment} alle {timing}")
 
 if __name__ == "__main__":
     
     patient_id = 101950247 # questo id lo prendo da cam_recognition, è la best_label che corrisponde al nome della cartella in cui ho messo le immagini del paziente, che a sua volta è l'id del paziente
-    patient_appointments = fetch_api_patient_data(API_URL, API_KEY, PRACTICE_ID, ARCHIVE_ID, patient_id)
-    # Assumo nello scrivere il codice che ci siamo un solo appuntamento al giorno per ogni paziente
-    today_appointment, timing = find_today_appointment(patient_appointments, patient_id)
-    change_apointment_status(today_appointment, timing)
+    execute_fetch_and_update(patient_id)
+    

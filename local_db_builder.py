@@ -7,9 +7,8 @@ from datetime import datetime, timezone
 
 
 
-def db_setup():
-    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-    db_path = os.path.join(BASE_DIR, "patient_data.db")
+def db_setup(db_path):
+    
     connection = sqlite3.connect(db_path) # prima creo una connessione con il db
     cursor = connection.cursor() # questo mi serve per fare il fetch dei risultati dalle queries
     cursor.execute("CREATE TABLE IF NOT EXISTS patients(patient_id TEXT PRIMARY KEY, name TEXT NOT NULL, surname TEXT NOT NULL, full_normalized_name TEXT, img_folder TEXT, last_sync TEXT)") # creo la tabella se non esiste già
@@ -71,6 +70,12 @@ def populate_db(connection ,cursor, patients_list):
    
     
     print("Database popolato con successo!")
+
+def db_creation(db_path):
+    connection, cursor = db_setup(db_path)
+    patients_list = get_patients_from_API(API_KEY, PRACTICE_ID, ARCHIVE_ID)
+    populate_db(connection, cursor, patients_list)
+    connection.close()
 
    
 
