@@ -28,6 +28,7 @@ Flow:
 # - frame della videocamera: se uso tutti i frame è troppo lento
 # - capire se va bene usare la levenshtein distance come metrica di similarità testuale
 # - capire se serve disambiguare i pazienti se fallisce il riconoscimento facciale e quello vocale da piu risultati
+
 if __name__ == "__main__":
 
     BASE_DIR = os.path.dirname(os.path.abspath(__file__))

@@ -111,13 +111,12 @@ def build_embedding_database(db_directory, destination_directory):
 if __name__ == "__main__":
 
     """
-    1-Recuperare le immagini da AlfaDocs (non si può)
-    2-Organizzare il DB locale usando patient_id come chiave
-    3-Calcolare gli embedding-Done
-    4-Fare recognition contro quel DB locale-Done
-    5-SARE poi lo stesso patient_id per le API
+    1 - Recuperare le immagini da AlfaDocs (non si può)
+    2 - Organizzare il DB locale usando patient_id come chiave
+    3 - Calcolare gli embedding-Done
+    4 - Fare recognition con quel DB locale-Done
     """
-    # questa parte è in stallo perchè non posso prendere le immagini da AlfaDocs, ma una volta che le ho posso costruire il database locale e fare recognition contro quello
+    # questa parte è in stallo perchè non posso prendere le immagini da AlfaDocs, ma una volta che le ho posso costruire il database locale e fare recognition 
     # db_directory = 'db_imgs_alfadocs'
     # destination_directory = 'db_embeddings_from_alfadocs'
     # collect_imgs_from_alfadocs(db_directory)

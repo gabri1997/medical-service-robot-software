@@ -11,14 +11,14 @@ def cosine_similarity(a, b):
 # TODO
 """
 Voglio:
-primo frame valido?
-o miglior frame tra N?
+    primo frame valido?
+    miglior frame tra N?
 Quando devo fermarmi?
-dopo N frame?
-dopo un certo score?
-dopo timeout?
-Se ho più facce nello stesso frame:
-quale scelgo?
+    dopo N frame?
+    dopo un certo score?
+    dopo timeout?
+ Se ho più volti nello stesso frame:
+    quale scelgo?
 """
 
 
