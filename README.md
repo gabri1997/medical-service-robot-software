@@ -22,3 +22,5 @@ A decision engine then classifies the situation (e.g., on-time, late, or new pat
 8. One or more candidate patients are retrieved.  
 9. If necessary, face recognition is used again to disambiguate between candidates.  
 10. Once the correct `patient_id` is identified, an API call is made to retrieve the patient’s appointments.
+
+![Diagramma](assets/chart.png)
