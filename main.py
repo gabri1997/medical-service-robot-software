@@ -24,8 +24,7 @@ Flow:
 
 # TODO:
 # - capire come settare i vari stati degli appuntamenti a seconda del momento in cui arriva il paziente
-# - non si gestisce il caso in cui ci sia più di 1 appuntamento per lo stesso paziente nello stesso giorno, in quel caso bisogna capire come fare a distinguere gli appuntamenti, ad esempio chiedendo al paziente a che ora ha l'appuntamento o facendo un confronto tra l'orario dell'appuntamento e l'orario di arrivo del paziente
-# - frame della videocamera: se uso tutti i frame è troppo lento
+# - se ci sono più appuntamenti in un giorno ci si riferisce al più vicino all'orario di arrivo del paziente
 # - capire se va bene usare la levenshtein distance come metrica di similarità testuale
 # - capire se serve disambiguare i pazienti se fallisce il riconoscimento facciale e quello vocale da piu risultati
 
