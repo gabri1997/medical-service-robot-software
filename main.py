@@ -55,9 +55,17 @@ if __name__ == "__main__":
     if not os.path.exists(destination_directory):
         build_embedding_database(db_directory, destination_directory) # servirà una logica per aggiornare il database quando ci sono nuovi pazienti o nuove immagini
     
-    # Bisogna capire come gestire i frames perchè se li uso tutti ci metto troppo tempo 
+    # Stop policy webcam: massimo frame, campionamento e uscita anticipata su score alto.
     app = FaceAnalysis(name="buffalo_l", providers=["CPUExecutionProvider"])
-    patient_id, best_score = cam_recognition(app, destination_directory, cap, debug_frames)
+    patient_id, best_score = cam_recognition(
+        app,
+        destination_directory,
+        cap,
+        debug_frames,
+        max_frames=120,
+        process_every_n_frames=3,
+        early_stop_score=0.72,
+    )
     cap.release()
 
     # patient_id = None # per debuggare la parte di text recognition, forzo il riconoscimento facciale a non funzionare, così posso testare la parte di riconoscimento vocale e di similarità testuale

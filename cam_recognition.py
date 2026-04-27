@@ -22,7 +22,15 @@ Quando devo fermarmi?
 """
 
 
-def cam_recognition(app, db_embeddings_path, cap, debug_frames):
+def cam_recognition(
+    app,
+    db_embeddings_path,
+    cap,
+    debug_frames,
+    max_frames=120,
+    process_every_n_frames=3,
+    early_stop_score=0.72,
+):
 
     if not os.path.exists(db_embeddings_path):
         print(f"Database embeddings not found at {db_embeddings_path}. Please build the database first.")
@@ -40,8 +48,12 @@ def cam_recognition(app, db_embeddings_path, cap, debug_frames):
 
     frames_best_label = None
     frames_best_score = 0.0
-    threshold = 0.0
 
+    if max_frames <= 0:
+        max_frames = 120
+    if process_every_n_frames <= 0:
+        process_every_n_frames = 1
+  
 
     # qui il concetto è ritornare il migliore fra tutti i frames senza utilizzare una soglia 
     # poi vorrei utilizzare una soglia invece per far partire il riconoscimento da speech, se ad esempio il volto riconosciuto ha confidence bassa allora parte
@@ -50,13 +62,25 @@ def cam_recognition(app, db_embeddings_path, cap, debug_frames):
     # soglia intermedia → candidato ambiguo, chiedi voce
     # soglia bassa → unknown
 
-    while True:
+    frame_count = 0
+    processed_frame_count = 0
+
+    while frame_count < max_frames:
         ret, frame = cap.read()
         if not ret:
             print("Can't receive frame (stream end?). Exiting ...")
             break
 
+        frame_count += 1
+        if frame_count % process_every_n_frames != 0:
+            continue
+
+        processed_frame_count += 1
+
         faces = app.get(frame)
+
+        if not faces:
+            continue
 
         for face in faces:
             x1, y1, x2, y2 = map(int, face.bbox)
@@ -68,10 +92,7 @@ def cam_recognition(app, db_embeddings_path, cap, debug_frames):
             best_score = sims[best_idx]
             best_label = db_labels[best_idx]
 
-            if best_score > threshold:
-                text = f"{best_label} ({best_score:.2f})"
-            else:
-                text = "Unknown"
+            text = f"{best_label} ({best_score:.2f})"
 
             if best_score > frames_best_score:
                 frames_best_score = best_score
@@ -83,6 +104,12 @@ def cam_recognition(app, db_embeddings_path, cap, debug_frames):
             cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
             cv2.putText(frame, text, (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 0), 2)
 
+            if frames_best_score >= early_stop_score:
+                print(
+                    f"Early stop: best score {frames_best_score:.2f} >= {early_stop_score:.2f}"
+                )
+                break
+
         # cv2.imshow('Face Recognition', frame)
         # if cv2.waitKey(1) == ord('q'):
         #     break
@@ -91,6 +118,13 @@ def cam_recognition(app, db_embeddings_path, cap, debug_frames):
             os.makedirs(debug_frames)
 
         cv2.imwrite(os.path.join(debug_frames, "debug_frame.jpg"), frame)
+
+        if frames_best_score >= early_stop_score:
+            break
+
+    print(
+        f"Processed {processed_frame_count} sampled frames out of {frame_count} total (max {max_frames})."
+    )
     
     cap.release()
     cv2.destroyAllWindows()

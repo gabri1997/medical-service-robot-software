@@ -28,6 +28,7 @@ def find_today_appointment(appointments, patient_id):
         return None, None
     today = datetime.today().date()
     today_app = []
+    timing  = []
 
     for appt in appointments:
         app_date = datetime.strptime(appt["date"], "%Y-%m-%d %H:%M:%S").date()
@@ -35,47 +36,63 @@ def find_today_appointment(appointments, patient_id):
             today_app.append(appt)
             print(f"Today's appointment for patient {patient_id}: {appt['id']} on {appt['date']}")
             # Se ha un appuntamento oggi chiamo la funzione che verifica se è in orario o no prendendo 15 minuti di tolleranza
-            timing = check_appointment_time(appt)
+            app_timing = check_appointment_time(appt)
+            timing.append(app_timing)
+
     if not today_app:
         print(f"No appointments for patient {patient_id} today. Checking for closest appointment...") 
         return None, None
     return today_app, timing
 
 def change_apointment_status(appointment, timing):
-    if appointment is None:
+    if not appointment:
         print("No appointment to update.")
         return False
-    
+
     headers = {
         'X-Api-Key': API_KEY,
         'Accept': 'application/json',
         'Content-Type': 'application/json'
     }
 
-    # qua sarà da capire come gestire i valori dei vari stati : "absent" "waiting" "in_care" "done" "cancelled" "confirmed"
     status_mapping = {
         'on_time': 'waiting',
         'late': 'waiting',
         'too_early': 'waiting'
     }
 
-    new_status = status_mapping.get(timing, 'scheduled')
-   
-    update_url = f"{API_URL}/practices/{PRACTICE_ID}/archives/{ARCHIVE_ID}/appointments/{appointment[0]['id']}"
-    
+    # appointment = lista di dict; timing = lista parallela di stringhe
+    # [(0, app1), (1, app2), ...]
+    # x[1] + il secondo elemento della tupla, cioè l'appuntamento; x[1]['date'] è la data dell'appuntamento; datetime.strptime(x[1]['date'], "%Y-%m-%d %H:%M:%S") è la data dell'appuntamento convertita in oggetto datetime; abs(datetime.strptime(x[1]['date'], "%Y-%m-%d %H:%M:%S") - datetime.now()) è la differenza in tempo tra la data dell'appuntamento e il momento attuale; min(..., key=lambda x: abs(datetime.strptime(x[1]['date'], "%Y-%m-%d %H:%M:%S") - datetime.now())) è la tupla (indice, appuntamento) che ha la data più vicina al momento attuale
+    indexed_appointments = list(enumerate(appointment))
+    closest_idx, closest_appointment = min(
+        indexed_appointments,
+        key=lambda x: abs(
+            datetime.strptime(x[1]['date'], "%Y-%m-%d %H:%M:%S") - datetime.now()
+        )
+    )
 
-    payload = {
-        "state": new_status
-    }
+    closest_timing = timing[closest_idx] if isinstance(timing, list) and closest_idx < len(timing) else None
+    new_status = status_mapping.get(closest_timing, 'scheduled')
 
+    print(
+        f"Updating appointment {closest_appointment['id']} for patient "
+        f"{closest_appointment['patientId']} to status {new_status} ..."
+    )
+    update_url = (
+        f"{API_URL}/practices/{PRACTICE_ID}/archives/{ARCHIVE_ID}/appointments/"
+        f"{closest_appointment['id']}"
+    )
+
+    payload = {"state": new_status}
     response = requests.patch(update_url, json=payload, headers=headers)
-    
+
     if response.status_code == 200:
-        print(f"Appointment {appointment[0]['id']} status updated to {new_status}.")
+        print(f"Appointment {closest_appointment['id']} status updated to {new_status}.")
         return True
-    else:
-        print(f"Failed to update appointment {appointment[0]['id']} status. Status code: {response.status_code}")
-        return False
+
+    print(f"Failed to update appointment {closest_appointment['id']} status. Status code: {response.status_code}")
+    return False
 
 def fetch_api_patient_data(API_URL, API_KEY, PRACTICE_ID, ARCHIVE_ID, patient_id):
 
