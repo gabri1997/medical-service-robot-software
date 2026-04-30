@@ -14,7 +14,7 @@ from config import FACE_RECOGNITION_THRESHOLD
 Flow:
     - The patient arrives at the system.
     - Face recognition is attempted.
-    - If the face is recognized with high confidence, the corresponding patient_id is retrieved.
+    - If the face is recognized with high confidence (>FACE_RECOGNITION_THRESHOLD), the corresponding patient_id is retrieved.
     - If the face is not recognized (or the confidence score is too low), the system asks for the patient’s name and surname.
     - The spoken input is transcribed into text.
     - The text is normalized to a consistent format.

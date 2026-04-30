@@ -41,6 +41,7 @@ def find_today_appointment(appointments, patient_id):
 
     if not today_app:
         print(f"No appointments for patient {patient_id} today. Checking for closest appointment...") 
+        # Qui manca la parte in cui verifico se ha appuntamenti ad esempio nei prossimi 10 giorni o nei 10 giorni precedenti, manca quel ramo ma devo capre se ha senso
         return None, None
     return today_app, timing
 
