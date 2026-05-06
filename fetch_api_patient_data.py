@@ -155,7 +155,7 @@ def execute_fetch_and_update(patient_id):
     print(f"Appuntamento di oggi per il paziente {patient_id}: {today_appointment} alle {timing}")
     if today_appointment is None:
         print(f"Il paziente {patient_id} non ha appuntamenti oggi.")
-        notify_event("patient has no appointments", {"patient_id": patient_id})
+        notify_event("Patient_has_no_appointments", {"patient_id": patient_id})
         return
     else:
         updated, new_status = change_apointment_status(today_appointment, timing)
@@ -173,9 +173,9 @@ def execute_fetch_and_update(patient_id):
     if os.path.exists(db_path):
         name, surname = get_patient_info_from_db(db_path, patient_id)
     else:
-        print(f"[DB] Database non trovato: {db_path}")
+        print(f"Database non trovato: {db_path}")
 
-    notify_event("appointment_status_updated", {
+    notify_event("Appointment_status_updated", {
         "patient_id": patient_id,
         "patient_name": name if name else None,
         "patient_surname": surname if surname else None,
