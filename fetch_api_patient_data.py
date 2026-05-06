@@ -1,7 +1,11 @@
 import requests
+import sqlite3
+import os
 from datetime import datetime, timedelta
 from config import API_URL, API_KEY, PRACTICE_ID, ARCHIVE_ID
 from notifier import notify_event
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 def check_appointment_time(appointment):
     now = datetime.now()
@@ -132,6 +136,19 @@ def fetch_api_patient_data(API_URL, API_KEY, PRACTICE_ID, ARCHIVE_ID, patient_id
     print(f"Patient {patient_id} has {len(patient_appointments)} appointments.")
     return patient_appointments
 
+def get_patient_info_from_db(db_path, patient_id):
+    connection = sqlite3.connect(db_path)
+    cursor = connection.cursor()
+    cursor.execute("SELECT name, surname FROM patients WHERE patient_id = ?", (patient_id,))
+    result = cursor.fetchone()
+    if result:
+        name, surname = result
+        print(f"Patient info from DB - ID: {patient_id}, Name: {name}, Surname: {surname}")
+        return name, surname
+    else:
+        print(f"No patient found in DB with ID: {patient_id}")
+        return None, None
+
 def execute_fetch_and_update(patient_id):
     patient_appointments = fetch_api_patient_data(API_URL, API_KEY, PRACTICE_ID, ARCHIVE_ID, patient_id)
     today_appointment, timing = find_today_appointment(patient_appointments, patient_id)
@@ -149,13 +166,17 @@ def execute_fetch_and_update(patient_id):
     patient_appointments = fetch_api_patient_data(API_URL, API_KEY, PRACTICE_ID, ARCHIVE_ID, patient_id)
     today_appointment, timing = find_today_appointment(patient_appointments, patient_id)
     print(f"Appuntamento con stato aggiornato di oggi per il paziente {patient_id}: {today_appointment} alle {timing}")
+    # una query impiega pochi millisecondi quindi non è un problema farla dopo aver aggiornato lo stato dell'appuntamento, così da avere la certezza che lo stato sia stato aggiornato correttamente prima di notificare l'evento
+    db_path = os.path.join(BASE_DIR, 'patient_data.db')
+    name, surname = get_patient_info_from_db(db_path, patient_id)
+
     notify_event("appointment_status_updated", {
         "patient_id": patient_id,
-        "appointment_id": today_appointment[0]['id'] if today_appointment else None,
+        "patient_name": name if name else None,
+        "patient_surname": surname if surname else None,
         "new_status": new_status
     })
     
-
 
 
 if __name__ == "__main__":

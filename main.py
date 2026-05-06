@@ -47,7 +47,7 @@ if __name__ == "__main__":
         print("Database già esistente, procedo con il riconoscimento del paziente ...")
 
     
-    video_path = os.path.join(video_folder, 'test_video.mp4')
+    video_path = os.path.join(video_folder, 'test_video2.mp4')
     cap = cv2.VideoCapture(video_path)
     
     # costruisco il database di embedding a partire dalle immagini dei pazienti solo se non è già stato costruito
@@ -79,7 +79,7 @@ if __name__ == "__main__":
         if patient_id == '':
             print("Non sono riuscito a riconoscere il paziente neanche con il vocale, ti prego di avvicinarti alla telecamera per un nuovo tentativo di riconoscimento facciale ...")
             notify_event("patient_not_recognized", {"patient_id": patient_id})
-            
+
     if patient_id is not None and patient_id != '':
         print(f"Patient ID riconosciuto: {patient_id}")
         execute_fetch_and_update(patient_id)
