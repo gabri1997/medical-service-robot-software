@@ -224,4 +224,6 @@ db_imgs_alfadocs/
 test_video/
 .env
 config.py
-/home/gabriele/Progetti/MedicalRobot/medical-service-robot-software/audio
+audio/
+n8n_data/
+patient_data.db

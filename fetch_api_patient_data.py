@@ -1,8 +1,7 @@
-import os
 import requests
 from datetime import datetime, timedelta
 from config import API_URL, API_KEY, PRACTICE_ID, ARCHIVE_ID
-
+from notifier import notify_event
 
 def check_appointment_time(appointment):
     now = datetime.now()
@@ -90,10 +89,10 @@ def change_apointment_status(appointment, timing):
 
     if response.status_code == 200:
         print(f"Appointment {closest_appointment['id']} status updated to {new_status}.")
-        return True
+        return True, new_status
 
     print(f"Failed to update appointment {closest_appointment['id']} status. Status code: {response.status_code}")
-    return False
+    return False, None
 
 def fetch_api_patient_data(API_URL, API_KEY, PRACTICE_ID, ARCHIVE_ID, patient_id):
 
@@ -137,7 +136,12 @@ def execute_fetch_and_update(patient_id):
     patient_appointments = fetch_api_patient_data(API_URL, API_KEY, PRACTICE_ID, ARCHIVE_ID, patient_id)
     today_appointment, timing = find_today_appointment(patient_appointments, patient_id)
     print(f"Appuntamento di oggi per il paziente {patient_id}: {today_appointment} alle {timing}")
-    updated = change_apointment_status(today_appointment, timing)
+    if today_appointment is None:
+        print(f"Il paziente {patient_id} non ha appuntamenti oggi.")
+        notify_event("patient has no appointments", {"patient_id": patient_id})
+        return
+    else:
+        updated, new_status = change_apointment_status(today_appointment, timing)
     if not updated:
         print("Non sono riuscito ad aggiornare lo stato dell'appuntamento.")
         return
@@ -145,6 +149,13 @@ def execute_fetch_and_update(patient_id):
     patient_appointments = fetch_api_patient_data(API_URL, API_KEY, PRACTICE_ID, ARCHIVE_ID, patient_id)
     today_appointment, timing = find_today_appointment(patient_appointments, patient_id)
     print(f"Appuntamento con stato aggiornato di oggi per il paziente {patient_id}: {today_appointment} alle {timing}")
+    notify_event("appointment_status_updated", {
+        "patient_id": patient_id,
+        "appointment_id": today_appointment[0]['id'] if today_appointment else None,
+        "new_status": new_status
+    })
+    
+
 
 
 if __name__ == "__main__":

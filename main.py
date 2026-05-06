@@ -7,7 +7,7 @@ from faster_whisper import WhisperModel
 from insightface.app import FaceAnalysis
 import cv2
 import os
-
+from notifier import notify_event
 from config import FACE_RECOGNITION_THRESHOLD
 
 """
@@ -78,13 +78,15 @@ if __name__ == "__main__":
 
         if patient_id == '':
             print("Non sono riuscito a riconoscere il paziente neanche con il vocale, ti prego di avvicinarti alla telecamera per un nuovo tentativo di riconoscimento facciale ...")
-       
+            notify_event("patient_not_recognized", {"patient_id": patient_id})
+            
     if patient_id is not None and patient_id != '':
         print(f"Patient ID riconosciuto: {patient_id}")
         execute_fetch_and_update(patient_id)
-  
 
-   
+
+
+
     
     
     

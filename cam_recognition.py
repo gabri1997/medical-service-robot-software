@@ -21,7 +21,8 @@ Quando devo fermarmi?
     quale scelgo?
 """
 
-
+# qua definisco quanti frames devo processare, leggo massimo 120 frames e ne analizzo solo 1/3, quindi 40
+# ma se trovo un frame con score alto con score di almeno 0.72 mi fermo subito
 def cam_recognition(
     app,
     db_embeddings_path,
