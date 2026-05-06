@@ -78,7 +78,7 @@ if __name__ == "__main__":
 
         if patient_id == '':
             print("Non sono riuscito a riconoscere il paziente neanche con il vocale, ti prego di avvicinarti alla telecamera per un nuovo tentativo di riconoscimento facciale ...")
-            notify_event("patient_not_recognized", {"patient_id": patient_id})
+            notify_event("patient_not_recognized")
 
     if patient_id is not None and patient_id != '':
         print(f"Patient ID riconosciuto: {patient_id}")

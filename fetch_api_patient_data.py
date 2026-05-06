@@ -166,9 +166,14 @@ def execute_fetch_and_update(patient_id):
     patient_appointments = fetch_api_patient_data(API_URL, API_KEY, PRACTICE_ID, ARCHIVE_ID, patient_id)
     today_appointment, timing = find_today_appointment(patient_appointments, patient_id)
     print(f"Appuntamento con stato aggiornato di oggi per il paziente {patient_id}: {today_appointment} alle {timing}")
-    # una query impiega pochi millisecondi quindi non è un problema farla dopo aver aggiornato lo stato dell'appuntamento, così da avere la certezza che lo stato sia stato aggiornato correttamente prima di notificare l'evento
+    
+    # guardo nel db locale per prendere nome e cognome dle paziente da passare al notifier
     db_path = os.path.join(BASE_DIR, 'patient_data.db')
-    name, surname = get_patient_info_from_db(db_path, patient_id)
+    name, surname = None, None
+    if os.path.exists(db_path):
+        name, surname = get_patient_info_from_db(db_path, patient_id)
+    else:
+        print(f"[DB] Database non trovato: {db_path}")
 
     notify_event("appointment_status_updated", {
         "patient_id": patient_id,
