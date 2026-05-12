@@ -34,7 +34,7 @@ def similarity(text1, text2):
 
 def search_patient_in_local_db(normalized_name, db_flile):
     # implementa qui la logica per cercare nel database locale il paziente più simile al nome normalizzato, ad esempio utilizzando una metrica di similarità testuale come la distanza di Levenshtein o la similarità coseno tra vettori di parole
-    patient_id = ''
+    patient_id = None
     # interroga il database locale per trovare il paziente più simile al nome normalizzato, ad esempio utilizzando una query SQL o un algoritmo di ricerca
     # prima uso una query SQL per prendere tutti i nomi normalizzati dei pazienti dal database, poi calcolo la similarità tra il nome normalizzato riconosciuto e i nomi normalizzati dei pazienti, infine prendo il paziente con la similarità più alta
     connection = sqlite3.connect(db_flile)

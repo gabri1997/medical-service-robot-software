@@ -69,18 +69,18 @@ if __name__ == "__main__":
 
     # patient_id = None # per debuggare la parte di text recognition, forzo il riconoscimento facciale a non funzionare, così posso testare la parte di riconoscimento vocale e di similarità testuale
     # qui sarà da capire che soglia mettere o se il ragionamento è corretto
-    if patient_id is None or best_score < FACE_RECOGNITION_THRESHOLD: # se non riesco a riconoscere il paziente con la webcam, o se il punteggio è troppo basso, faccio il fallback con il vocale
+    if patient_id is None or best_score is None or best_score < FACE_RECOGNITION_THRESHOLD: # se non riesco a riconoscere il paziente con la webcam, o se il punteggio è troppo basso, faccio il fallback con il vocale
         print("Non sono riuscito a riconoscere il paziente, fallback con il vocale ... come ti chiami?")
 
         model = WhisperModel("small", device="cpu", compute_type="int8")
         audio_path = os.path.join(audio_folder, 'gabriele_rosati.mp3')
         patient_id = execute_text_recognition(audio_path, model, db_file)
 
-        if patient_id == '':
+        if patient_id is None:
             print("Non sono riuscito a riconoscere il paziente neanche con il vocale, ti prego di avvicinarti alla telecamera per un nuovo tentativo di riconoscimento facciale ...")
             notify_event("Patient_not_recognized")
 
-    if patient_id is not None and patient_id != '':
+    if patient_id is not None:
         print(f"Patient ID riconosciuto: {patient_id}")
         execute_fetch_and_update(patient_id)
 
