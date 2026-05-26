@@ -30,7 +30,7 @@ def cam_recognition(
     debug_frames,
     max_frames=120,
     process_every_n_frames=3,
-    early_stop_score=0.72,
+    early_stop_score=0.70,
 ):
 
     if not os.path.exists(db_embeddings_path):
@@ -98,13 +98,17 @@ def cam_recognition(
             if best_score > frames_best_score:
                 frames_best_score = best_score
                 frames_best_label = best_label
+                # la best label dipende dal nome della cartella in cui ho messo il gt, in questo caso deve essere il patient_id, così poi posso fare la chiamata alle API con quello stesso patient_id per recuperare i dati del paziente riconosciuto
+                print(f"Best match updated: {best_label} with score {best_score:.2f}")
+                if not os.path.exists(debug_frames):
+                    os.makedirs(debug_frames)
+                cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
+                cv2.putText(frame, text, (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 0), 2)
+                cv2.imwrite(os.path.join(debug_frames, "best_debug_frame.jpg"), frame)
 
-            # la best label dipende dal nome della cartella in cui ho messo il gt, in questo caso deve essere il patient_id, così poi posso fare la chiamata alle API con quello stesso patient_id per recuperare i dati del paziente riconosciuto
-            print(f"Best match: {best_label} with score {best_score:.2f}")
-
-            cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
-            cv2.putText(frame, text, (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 0), 2)
-
+            else:
+                print(f"Match found but not best: {best_label} with score {best_score:.2f}")
+                s
             if frames_best_score >= early_stop_score:
                 print(
                     f"Early stop: best score {frames_best_score:.2f} >= {early_stop_score:.2f}"
@@ -114,11 +118,6 @@ def cam_recognition(
         # cv2.imshow('Face Recognition', frame)
         # if cv2.waitKey(1) == ord('q'):
         #     break
-
-        if not os.path.exists(debug_frames):
-            os.makedirs(debug_frames)
-
-        cv2.imwrite(os.path.join(debug_frames, "debug_frame.jpg"), frame)
 
         if frames_best_score >= early_stop_score:
             break
