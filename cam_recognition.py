@@ -108,7 +108,7 @@ def cam_recognition(
 
             else:
                 print(f"Match found but not best: {best_label} with score {best_score:.2f}")
-                s
+                
             if frames_best_score >= early_stop_score:
                 print(
                     f"Early stop: best score {frames_best_score:.2f} >= {early_stop_score:.2f}"
