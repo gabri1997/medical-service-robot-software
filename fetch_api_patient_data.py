@@ -15,7 +15,7 @@ def check_appointment_time(appointment):
 
     if timedelta(minutes=-15) <= diff <= timedelta(minutes=15):
         print(f"Appointment ON TIME for patient {appointment['patientId']}")
-        return 'on_time'
+        return 'puntuale'
     
     elif diff < timedelta(minutes=-15):
         print(f"Appointment TOO EARLY for patient {appointment['patientId']}")
@@ -60,7 +60,7 @@ def change_apointment_status(appointment, timing):
     }
 
     status_mapping = {
-        'on_time': 'waiting',
+        'puntuale': 'waiting',
         'late': 'waiting',
         'too_early': 'waiting'
     }
@@ -93,10 +93,10 @@ def change_apointment_status(appointment, timing):
 
     if response.status_code == 200:
         print(f"Appointment {closest_appointment['id']} status updated to {new_status}.")
-        return True, new_status
+        return True, new_status, closest_timing
 
     print(f"Failed to update appointment {closest_appointment['id']} status. Status code: {response.status_code}")
-    return False, None
+    return False, None, None
 
 def fetch_api_patient_data(API_URL, API_KEY, PRACTICE_ID, ARCHIVE_ID, patient_id):
 
@@ -158,7 +158,7 @@ def execute_fetch_and_update(patient_id):
         notify_event("Patient_has_no_appointments", {"patient_id": patient_id})
         return
     else:
-        updated, new_status = change_apointment_status(today_appointment, timing)
+        updated, new_status, appointment_timing = change_apointment_status(today_appointment, timing)
     if not updated:
         print("Non sono riuscito ad aggiornare lo stato dell'appuntamento.")
         return
@@ -179,9 +179,10 @@ def execute_fetch_and_update(patient_id):
         "patient_id": patient_id,
         "patient_name": name if name else None,
         "patient_surname": surname if surname else None,
-        "new_status": new_status
+        "new_status": new_status,
+        "timing": appointment_timing
     })
-    
+        
 
 
 if __name__ == "__main__":
