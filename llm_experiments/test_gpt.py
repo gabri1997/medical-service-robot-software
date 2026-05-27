@@ -1,24 +1,63 @@
+import sys
+import os
+import json
+
+sys.path.append(
+    os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+)
 from openai import OpenAI
 from dotenv import load_dotenv
-import os
+from tool_calling import tools # qui importo la lista dei tool che il modello può utilizzare, è importante che sia ben definita e aggiornata con tutte le funzioni che il sistema può eseguire, ad esempio le funzioni per il riconoscimento facciale, per la gestione degli appuntamenti, per la trascrizione vocale, ecc.
+from fetch_api_patient_data import fetch_api_patient_data 
 
-# Decido cosa fare in base al lingugio naturale dell'utente, ad esempio se l'utente dice "Sono arrivato" allora chiamo la funzione per prendere gli appuntamenti del paziente, se invece l'utente dice "Non riesco a trovarti nel sistema. Puoi ripetere lentamente il cognome?" allora chiedo di nuovo il nome al paziente e chiamo la funzione di riconoscimento vocale, ecc.
-# LLM = decision layer, in praticha orchestra i tools deterministici del sistema, ad esempio le funzioni per il riconoscimento facciale, per la gestione degli appuntamenti, per la trascrizione vocale, ecc. e prendo decisioni su quale tool chiamare in base all'input dell'utente e allo stato della conversazione, ad esempio se riconosco un volto con alta confidenza allora prendo direttamente il patient_id e chiamo la funzione per prendere i dati del paziente, se invece non riconosco il volto o la confidenza è bassa allora chiedo il nome al paziente e chiamo la funzione di riconoscimento vocale e così via
-# Python = execution layer
+"""
+Decido cosa fare in base al lingugio naturale dell'utente, ad esempio se l'utente dice "Sono arrivato" allora chiamo la funzione per prendere gli appuntamenti del paziente, se invece l'utente dice "Non riesco a trovarti nel sistema. Puoi ripetere lentamente il cognome?" allora chiedo di nuovo il nome al paziente e chiamo la funzione di riconoscimento vocale, ecc.
+LLM = decision layer, in praticha orchestra i tools deterministici del sistema, ad esempio le funzioni per il riconoscimento facciale, per la gestione degli appuntamenti, per la trascrizione vocale, ecc. e prendo decisioni su quale tool chiamare in base all'input dell'utente e allo stato della conversazione, ad esempio se riconosco un volto con alta confidenza allora prendo direttamente il patient_id e chiamo la funzione per prendere i dati del paziente, se invece non riconosco il volto o la confidenza è bassa allora chiedo il nome al paziente e chiamo la funzione di riconoscimento vocale e così via
+Python = execution layer
 
-# Possibile esempio di interazioni ad alto livello fra LLM e componenti deterministici del sistema, ad esempio per la gestione degli appuntamenti:
-# Utente:
-# - "Sono arrivato"
-# LLM decide:
-# - "Devo chiamare fetch_appointment"
-# Python esegue la funzione
-# LLM genera risposta finale
+Possibile esempio di interazioni ad alto livello fra LLM e componenti deterministici del sistema, ad esempio per la gestione degli appuntamenti:
+Utente:
+- "Sono arrivato"
+LLM decide:
+- "Devo chiamare fetch_appointment"
+Python esegue la funzione
 
+LLM:
+    - reasoning
+    - orchestration
+    - semantic understanding
+Software:
+    - execution
+    - APIs
+    - DB
+    - side effects
+    - security
+
+# ARCHITETTURA MENTALE DEL SISTEMA:
+
+        Speech
+        ↓
+        Whisper
+        ↓
+        Text
+        ↓
+        LLM reasoning
+        ↓
+        Tool selection
+        ↓
+        Python execution
+        ↓
+        Tool result
+        ↓
+        LLM response generation
+        ↓
+        TTS
+"""
 # carico il file .env per accedere alle variabili d'ambiente, ad esempio la chiave API di OpenAI
 load_dotenv()
 
 client = OpenAI(
-    api_key=os.getenv("OPEN_AI_API_KEY")
+    api_key=os.getenv("OPENAI_API_KEY")
 )
 
 # conversazione base
@@ -26,16 +65,17 @@ messages = [
     # SYSTEM PROMPT: fornisce al modello informazioni sul suo ruolo, obiettivi e contesto che deve avere, è il cervello del sistema, è importante che sia ben definito e dettagliato per guidare il comportamento del modello in modo coerente con le esigenze del robot
     {"role": "system", "content": ("You are a helpful assistant for a medical service robot. Your task is to assist the robot in understanding user intents, resolving ambiguities, selecting actions, maintaining conversational state, and providing human-like fallbacks when necessary.")},    
     # USER PROMPT: rappresenta l'input dell'utente, ad esempio ciò che il paziente dice al robot, è importante che sia realistico e rappresentativo delle interazioni che il robot potrebbe avere con i pazienti
-    {"role": "user", "content": "Ciao, sono Ettore Candeloro e sono arrivato un po' in anticipo al mio appuntamento."}]
-
-
+    {"role": "user", "content": "Quando è l'appuntamenti del paziente 101950247 ?"},
+]
 # Chiamata API
 response = client.chat.completions.create(
     model="gpt-4o-mini",
     messages=messages,
+    tools=tools, # qui passo la lista dei tool che il modello può utilizzare, è importante che sia ben definita e aggiornata con tutte le funzioni che il sistema può eseguire, ad esempio le funzioni per il riconoscimento facciale, per la gestione degli appuntamenti, per la trascrizione vocale, ecc.
+    tool_choice="auto", # qui dico al modello di scegliere automaticamente quale tool utilizzare in base all'input dell'utente e allo stato della conversazione, è importante che il modello sia in grado di fare questa scelta in modo intelligente e coerente con le esigenze del robot, ad esempio se l'utente dice "Sono arrivato" allora il modello dovrebbe capire che deve chiamare la funzione per prendere gli appuntamenti del paziente, se invece l'utente dice "Non riesco a trovarti nel sistema. Puoi ripetere lentamente il cognome?" allora il modello dovrebbe capire che deve chiamare la funzione di riconoscimento vocale, ecc.
     temperature=0.3 # controllo del determinismo, se è basso le risposte saranno meno creative e deterministiche 
 )
-
+response_message = response.choices[0].message
 # Estrai risposta
 assistant_reply = response.choices[0].message.content
 
@@ -43,3 +83,50 @@ print("\nAssistant:\n")
 print(assistant_reply)
 print("\nFull response object:\n")
 print(response) # questa stampa mi serve per capire meglio cosa mi ritorna l'API, ad esempio se ci sono campi utili per il debug o per migliorare la conversazione, per capire usage, tokens e metadata
+
+tool_calls = response_message.tool_calls or []
+if not tool_calls:
+    raise RuntimeError("The model did not return any tool calls.")
+
+tool_call = tool_calls[0]
+
+print("\nFUNCTION NAME:\n")
+function_name = tool_call.function.name
+print(function_name)
+
+arguments = tool_call.function.arguments
+print("\nRAW ARGUMENTS:\n")
+print(arguments)
+
+# Gli argomenti del tool come dict Python
+parsed_arguments = json.loads(arguments)
+print("\nPARSED ARGUMENTS:\n")
+print(parsed_arguments)
+
+# qua inizio a fare il routing alle funzioni di backend
+if function_name == 'fetch_api_patient_data':
+    patient_id = parsed_arguments.get("patient_id")
+    print(f"\nPatient ID to fetch data for: {patient_id}")
+
+    print("\nSimulating TOOL function execution...\n")
+
+    patient_appointments = fetch_api_patient_data(patient_id) # qui dovrei chiamare la funzione reale che prende i dati del paziente, per ora simulo il risultato
+    print(f"\nResult from TOOL function: {patient_appointments}")
+    
+    # qua costruisco observation memory e tool feedback loop
+    # con questo il modello diventa 'stateful' nel senso che lo stato della conversazione evolve nel tempo
+    messages.append(response_message) # qua salvo la decisione/tool request fatta dal modello di chiamare fetch_api_patient_appointment con il patient_id specifico, in questo modo il modello 'ricorda' di aver fatto quella richiesta e può utilizzare questa informazione per generare la risposta finale, ad esempio se l'utente chiede "Quando è l'appuntamento del paziente 101950247?" e il modello chiama fetch_api_patient_appointment con patient_id=101950247, allora quando il modello genera la risposta finale può utilizzare le informazioni ottenute da fetch_api_patient_appointment per rispondere correttamente alla domanda dell'utente, ad esempio "L'appuntamento del paziente 101950247 è alle 15:00"
+    # ora faccio observation injection, cioè dico al modello "Ecco il risultato della funzione che hai chiamato, utilizza queste informazioni per rispondere alla domanda dell'utente", in questo modo il modello può utilizzare le informazioni ottenute dalla funzione per generare una risposta più accurata e contestualizzata, ad esempio se l'utente chiede "Quando è l'appuntamento del paziente 101950247?" e il modello chiama fetch_api_patient_appointment con patient_id=101950247 e ottiene come risultato "L'appuntamento del paziente 101950247 è alle 15:00", allora quando il modello genera la risposta finale può utilizzare questa informazione per rispondere correttamente alla domanda dell'utente, ad esempio "L'appuntamento del paziente 101950247 è alle 15:00"
+    messages.append({
+        "role": "tool", # questo serve per far capire al modello che questo messaggio proviene da un tool
+        "tool_call_id": tool_call.id,
+        "content": str(patient_appointments)
+    })
+    final_response = client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=messages)
+
+    final_message = final_response.choices[0].message.content
+
+    print("\nFINAL RESPONSE:\n")
+    print(final_message)
