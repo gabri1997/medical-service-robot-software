@@ -9,10 +9,16 @@ In pratica separo semantica da infrastruttura nascondendo i dettagli del backend
 _______________________________________
 
 """
-from fetch_api_patient_data import fetch_api_patient_data
+from fetch_api_patient_data import execute_fetch_and_update
+from main import identify_patient
 
-def fetch_api_patient_appointment(patient_id):
+def llm_execute_fetch_and_update(patient_id):
 
-    today_appointments = fetch_api_patient_data(patient_id)
-    return today_appointments
+    result = execute_fetch_and_update(patient_id)
+    return result
 
+def llm_identify_patient():
+
+    patient_id = identify_patient()
+    return patient_id
+    

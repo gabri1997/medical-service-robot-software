@@ -113,10 +113,8 @@ if __name__ == "__main__":
 
     if patient_id is not None:
         print(f"Patient ID riconosciuto: {patient_id}")
-        execute_fetch_and_update(patient_id)
-
-
-
+        result = execute_fetch_and_update(patient_id)
+        print(f"Result from TOOL function: {result}")
 
     
     

@@ -17,18 +17,34 @@ tools = [
     {
         "type": "function",
         "function": {
-            "name": "fetch_api_patient_appointment", # qui chiaramente è fondamentale mantenere il nome della funzione presente
+            "name": "llm_execute_fetch_and_update", # qui chiaramente è fondamentale mantenere il nome della funzione presente
             "description": "Retrieve today's appointment for a patient",
             "parameters": {
                 "type": "object",
                 "properties": {
-                    "patient_id": { # qui l'llm deve conoscere i parametri dinamici della funzione, in questo caso il patient_id che è l'output di cam_recognition o text_recognition, e che è fondamentale per fare la chiamata alle API per recuperare i dati del paziente
-                        "type": "integer",
+                    "patient_id": { 
                         "description": "Unique patient identifier"
                     }
                 },
                 "required": ["patient_id"]
             }
         }
-    }
+    },
+    # questo tool serve per osservare il mondo in pratica, vede il pziente e capische chi è
+    {
+        "type": "function",
+        "function": {
+            "name": "llm_identify_patient", # qui chiaramente è fondamentale mantenere il nome della funzione presente
+            "description": "Identify the patient based on available information, such as facial recognition and voice recognition",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    
+                    },
+                "required": [] # qui non si richiede nulla perchè l'id_patient sarà l'output di qeuesto tool 
+                }
+                
+            }
+        }
+    
 ]

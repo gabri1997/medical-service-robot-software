@@ -184,10 +184,16 @@ def execute_fetch_and_update(patient_id):
         "new_status": new_status,
         "timing": appointment_timing
     })
+    return {
+    "patient_id": patient_id,
+    "today_appointment": today_appointment,
+    "timing": appointment_timing,
+    "new_status": new_status
+}
         
 
 if __name__ == "__main__":
     
     patient_id = 101950247 # questo id lo prendo da cam_recognition, è la best_label che corrisponde al nome della cartella in cui ho messo le immagini del paziente, che a sua volta è l'id del paziente
-    execute_fetch_and_update(patient_id)
+    result = execute_fetch_and_update(patient_id)
     
