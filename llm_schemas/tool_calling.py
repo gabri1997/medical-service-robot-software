@@ -12,11 +12,12 @@ LLM response generation
 """
 
 # qui devo definire tutti i tool che il sistema LLM può usare, in pratica una descrizione machine-readable della funzione
+# interfacce semantiche, sono la descrizione delle capacità del modello LLM
 tools = [
     {
         "type": "function",
         "function": {
-            "name": "fetch_api_patient_data", # qui chiaramente è fondamentale mantenere il nome della funzione presente
+            "name": "fetch_api_patient_appointment", # qui chiaramente è fondamentale mantenere il nome della funzione presente
             "description": "Retrieve today's appointment for a patient",
             "parameters": {
                 "type": "object",

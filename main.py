@@ -53,8 +53,7 @@ from config import FACE_RECOGNITION_THRESHOLD
 # - capire se va bene usare la levenshtein distance come metrica di similarità testuale
 # - capire se serve disambiguare i pazienti se fallisce il riconoscimento facciale e quello vocale da piu risultati
 
-if __name__ == "__main__":
-
+def identify_patient():
     BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
     db_directory = os.path.join(BASE_DIR, 'db_imgs')
@@ -104,6 +103,13 @@ if __name__ == "__main__":
         if patient_id is None:
             print("Non sono riuscito a riconoscere il paziente neanche con il vocale, ti prego di avvicinarti alla telecamera per un nuovo tentativo di riconoscimento facciale ...")
             notify_event("Patient_not_recognized")
+            return None
+        
+    return patient_id
+
+if __name__ == "__main__":
+
+    patient_id = identify_patient()
 
     if patient_id is not None:
         print(f"Patient ID riconosciuto: {patient_id}")
