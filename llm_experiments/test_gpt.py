@@ -10,6 +10,7 @@ from dotenv import load_dotenv
 from llm_schemas.tool_calling import tools # qui importo la lista dei tool che il modello può utilizzare, è importante che sia ben definita e aggiornata con tutte le funzioni che il sistema può eseguire, ad esempio le funzioni per il riconoscimento facciale, per la gestione degli appuntamenti, per la trascrizione vocale, ecc.
 from llm_tools.wrappers import execute_fetch_and_update # qui importo la funzione wrapper che chiama la funzione reale per prendere i dati del paziente, è importante che questa funzione sia ben definita e aggiornata con tutte le funzionalità necessarie per interagire con le API del sistema, ad esempio gestire errori, formattare i dati, ecc.
 from llm_orchestration.dispatcher import dispatch_tool_call # qui importo la funzione di dispatcher che fa il routing alle funzioni di backend in base al nome della funzione chiamata dal modello, è importante che questa funzione sia ben definita e aggiornata con tutte le funzionalità necessarie per fare il routing corretto, ad esempio riconoscere i nomi delle funzioni, gestire errori, ecc.
+from llm_state.agent_state import AgentState # qui importo la classe AgentState che rappresenta lo stato del mio agente, è importante che questa classe sia ben definita e aggiornata con tutte le informazioni necessarie per rappresentare lo stato del robot, ad esempio informazioni sul paziente, informazioni sugli appuntamenti, informazioni sulla sessione, ecc.
 """
 ___________________________________________________
 
@@ -74,13 +75,20 @@ load_dotenv()
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-# conversazione base
-messages = [
-    # SYSTEM PROMPT: fornisce al modello informazioni sul suo ruolo, obiettivi e contesto che deve avere, è il cervello del sistema, è importante che sia ben definito e dettagliato per guidare il comportamento del modello in modo coerente con le esigenze del robot
-    {"role": "system", "content": ("You are a helpful assistant for a medical service robot. Your task is to assist the robot in understanding user intents, resolving ambiguities, selecting actions, maintaining conversational state, and providing human-like fallbacks when necessary.")},    
-    # USER PROMPT: rappresenta l'input dell'utente, ad esempio ciò che il paziente dice al robot, è importante che sia realistico e rappresentativo delle interazioni che il robot potrebbe avere con i pazienti
-    {"role": "user", "content": "Quando è il mio appuntamento?"},
-]
+state = AgentState() # qui creo un'istanza dello stato del mio agente, è importante che questa istanza sia ben definita e aggiornata con tutte le informazioni necessarie per rappresentare lo stato del robot, ad esempio informazioni sul paziente, informazioni sugli appuntamenti, informazioni sulla sessione, ecc.
+
+state.add_message(
+    "user",
+    "Quando è il mio appuntamento?"
+)
+
+# # conversazione base
+# messages = [
+#     # SYSTEM PROMPT: fornisce al modello informazioni sul suo ruolo, obiettivi e contesto che deve avere, è il cervello del sistema, è importante che sia ben definito e dettagliato per guidare il comportamento del modello in modo coerente con le esigenze del robot
+#     {"role": "system", "content": ("You are a helpful assistant for a medical service robot. Your task is to assist the robot in understanding user intents, resolving ambiguities, selecting actions, maintaining conversational state, and providing human-like fallbacks when necessary.")},    
+#     # USER PROMPT: rappresenta l'input dell'utente, ad esempio ciò che il paziente dice al robot, è importante che sia realistico e rappresentativo delle interazioni che il robot potrebbe avere con i pazienti
+#     {"role": "user", "content": "Quando è il mio appuntamento?"},
+# ]
 
 # devo definire un numero massimo di iterazioni per evitare loop infiniti
 max_iterations = 5
@@ -101,7 +109,7 @@ for iteration in range(max_iterations):
     # Chiamata API
     response = client.chat.completions.create(
         model="gpt-4o-mini",
-        messages=messages,
+        messages=state.messages,
         tools=tools, # qui passo la lista dei tool che il modello può utilizzare, è importante che sia ben definita e aggiornata con tutte le funzioni che il sistema può eseguire, ad esempio le funzioni per il riconoscimento facciale, per la gestione degli appuntamenti, per la trascrizione vocale, ecc.
         tool_choice="auto", # qui dico al modello di scegliere automaticamente quale tool utilizzare in base all'input dell'utente e allo stato della conversazione, è importante che il modello sia in grado di fare questa scelta in modo intelligente e coerente con le esigenze del robot, ad esempio se l'utente dice "Sono arrivato" allora il modello dovrebbe capire che deve chiamare la funzione per prendere gli appuntamenti del paziente, se invece l'utente dice "Non riesco a trovarti nel sistema. Puoi ripetere lentamente il cognome?" allora il modello dovrebbe capire che deve chiamare la funzione di riconoscimento vocale, ecc.
         temperature=0.3 # controllo del determinismo, se è basso le risposte saranno meno creative e deterministiche 
@@ -145,7 +153,14 @@ for iteration in range(max_iterations):
         # qua inizio a fare il routing alle funzioni di backend
 
         result = dispatch_tool_call(function_name, parsed_arguments) # qui chiamo la funzione di dispatcher che fa il routing alle funzioni di backend in base al nome della funzione chiamata dal modello, è importante che questa funzione sia ben definita e aggiornata con tutte le funzionalità necessarie per fare il routing corretto, ad esempio riconoscere i nomi delle funzioni, gestire errori, ecc.
+        if "patient_id" in result:
+            state.patient_id = result["patient_id"]
 
+        if "timing" in result:
+            state.appointment_timing = result["timing"]
+
+        if "new_status" in result:
+            state.appointment_status = result["new_status"]
 
         """
         ___________________________________________
@@ -163,14 +178,14 @@ for iteration in range(max_iterations):
 
         # qua costruisco observation memory e tool feedback loop
         # con questo il sisteam di conversazione diventa 'stateful' nel senso che lo stato della conversazione evolve nel tempo
-        messages.append(response_message) # qua salvo la decisione/tool request fatta dal modello di chiamare fetch_api_patient_appointment con il patient_id specifico, in questo modo il modello 'ricorda' di aver fatto quella richiesta e può utilizzare questa informazione per generare la risposta finale, ad esempio se l'utente chiede "Quando è l'appuntamento del paziente 101950247?" e il modello chiama fetch_api_patient_appointment con patient_id=101950247, allora quando il modello genera la risposta finale può utilizzare le informazioni ottenute da fetch_api_patient_appointment per rispondere correttamente alla domanda dell'utente, ad esempio "L'appuntamento del paziente 101950247 è alle 15:00"
+        state.messages.append(response_message) # qua salvo la decisione/tool request fatta dal modello di chiamare fetch_api_patient_appointment con il patient_id specifico, in questo modo il modello 'ricorda' di aver fatto quella richiesta e può utilizzare questa informazione per generare la risposta finale, ad esempio se l'utente chiede "Quando è l'appuntamento del paziente 101950247?" e il modello chiama fetch_api_patient_appointment con patient_id=101950247, allora quando il modello genera la risposta finale può utilizzare le informazioni ottenute da fetch_api_patient_appointment per rispondere correttamente alla domanda dell'utente, ad esempio "L'appuntamento del paziente 101950247 è alle 15:00"
         # ora faccio observation injection, cioè dico al modello "Ecco il risultato della funzione che hai chiamato, utilizza queste informazioni per rispondere alla domanda dell'utente", in questo modo il modello può utilizzare le informazioni ottenute dalla funzione per generare una risposta più accurata e contestualizzata, ad esempio se l'utente chiede "Quando è l'appuntamento del paziente 101950247?" e il modello chiama fetch_api_patient_appointment con patient_id=101950247 e ottiene come risultato "L'appuntamento del paziente 101950247 è alle 15:00", allora quando il modello genera la risposta finale può utilizzare questa informazione per rispondere correttamente alla domanda dell'utente, ad esempio "L'appuntamento del paziente 101950247 è alle 15:00"
-        messages.append({
+        state.messages.append({
             "role": "tool", # questo serve per far capire al modello che questo messaggio proviene da un tool
             "tool_call_id": tool_call.id,
             "content": json.dumps(result) # qua passo il risultato ottenuto dalla funzione reale, in questo modo faccio observation injection, cioè dico al modello "Ecco il risultato della funzione che hai chiamato, utilizza queste informazioni per rispondere alla domanda dell'utente"
             })
     
         print("\nUpdated messages with tool response:\n")
-        for msg in messages:
+        for msg in state.messages:
             print(msg)
