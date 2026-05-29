@@ -11,6 +11,8 @@ class AgentState:
             }
         ]
 
+        self.current_mode = 'idle'
+
         # patient info 
         self.patient_id = None
         # appointment info
@@ -18,6 +20,8 @@ class AgentState:
         self.appointment_status = None
         # session info 
         self.session_active = True # questo attributo mi serve per capire se la conversazione con l'utente è ancora attiva o no 
+        # intent info
+        self.current_intent = None
 
     def add_message(self, role, content):
 
@@ -25,3 +29,17 @@ class AgentState:
                 "role": role,
                 "content": content
         })
+    
+    # questa funzione servirà quando vorrò resettare lo stato dell'agente una volta terminata la conversazione
+    def reset(self):
+
+        self.patient_id = None
+        
+        self.appointment_timing = None
+        self.appointment_status = None
+
+        self.session_active = False
+
+        self.current_intent = None
+
+        

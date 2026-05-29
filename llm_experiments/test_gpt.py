@@ -9,6 +9,7 @@ from openai import OpenAI
 from dotenv import load_dotenv
 from llm_schemas.tool_calling import tools # qui importo la lista dei tool che il modello può utilizzare, è importante che sia ben definita e aggiornata con tutte le funzioni che il sistema può eseguire, ad esempio le funzioni per il riconoscimento facciale, per la gestione degli appuntamenti, per la trascrizione vocale, ecc.
 from llm_tools.wrappers import execute_fetch_and_update # qui importo la funzione wrapper che chiama la funzione reale per prendere i dati del paziente, è importante che questa funzione sia ben definita e aggiornata con tutte le funzionalità necessarie per interagire con le API del sistema, ad esempio gestire errori, formattare i dati, ecc.
+from llm_orchestration.policies import validate_tool_call # qui importo la funzione di policy che verifica se è il momento giusto per fare il check-in dell'appuntamento, è importante che questa funzione sia ben definita e aggiornata con tutte le regole necessarie per prendere decisioni corrette, ad esempio verificare l'orario dell'appuntamento, verificare lo stato del paziente, ecc.
 from llm_orchestration.dispatcher import dispatch_tool_call # qui importo la funzione di dispatcher che fa il routing alle funzioni di backend in base al nome della funzione chiamata dal modello, è importante che questa funzione sia ben definita e aggiornata con tutte le funzionalità necessarie per fare il routing corretto, ad esempio riconoscere i nomi delle funzioni, gestire errori, ecc.
 from llm_state.agent_state import AgentState # qui importo la classe AgentState che rappresenta lo stato del mio agente, è importante che questa classe sia ben definita e aggiornata con tutte le informazioni necessarie per rappresentare lo stato del robot, ad esempio informazioni sul paziente, informazioni sugli appuntamenti, informazioni sulla sessione, ecc.
 """
@@ -126,9 +127,14 @@ for iteration in range(max_iterations):
     tool_calls = response_message.tool_calls or []
     if not tool_calls:
         print("\nNo tool calls made by the model. Ending conversation loop.")
+        print(response_message.content)
         break # se il modello non chiama nessun tool allora esco dal loop, in questo modo evito di fare iterazioni inutili e posso gestire meglio i casi in cui il modello non riesce a capire l'intento dell'utente o a prendere decisioni corrette
 
+    # qua llm dice per risolvere questo task devo usare questi tools:.... quindi va fuori dal for loop
+    state.messages.append(response_message) # qua salvo la decisione/tool request fatta dal modello di chiamare fetch_api_patient_appointment con il patient_id specifico, in questo modo il modello 'ricorda' di aver fatto quella richiesta e può utilizzare questa informazione per generare la risposta finale, ad esempio se l'utente chiede "Quando è l'appuntamento del paziente 101950247?" e il modello chiama fetch_api_patient_appointment con patient_id=101950247, allora quando il modello genera la risposta finale può utilizzare le informazioni ottenute da fetch_api_patient_appointment per rispondere correttamente alla domanda dell'utente, ad esempio "L'appuntamento del paziente 101950247 è alle 15:00"
+    
     for tool_call in tool_calls:
+        
         print("\nTool call made by the model:\n")
         function_name = tool_call.function.name
         print(f"Tool name: {function_name}")
@@ -138,29 +144,59 @@ for iteration in range(max_iterations):
         print("\nPARSED ARGUMENTS:\n")
         print(parsed_arguments)
 
-        """
-        _________________________________________
+        # qua partono le policy di validazione
+        validation_result, reason = validate_tool_call(function_name, state) # qui chiamo la funzione di policy che verifica se è il momento giusto per fare il check-in dell'appuntamento, è importante che questa funzione sia ben definita e aggiornata con tutte le regole necessarie per prendere decisioni corrette, ad esempio verificare l'orario dell'appuntamento, verificare lo stato del paziente, ecc.
+        if validation_result == False:
+            print(f"\nTool call '{function_name}' is not valid in the current context. Skipping execution.")
+            print(f"Reason: {reason}")
+            result = {
+                "success": False,
+                "event": "Tool call validation failed",
+                "data": {
+                    "function_name": function_name,
+                    "reason": reason
+                }
+            }
+        else:
+            print(f"\nTool call '{function_name}' is valid. Proceeding with execution.")
+            
+            """
+            _________________________________________
 
-        Routing delle mie funzioni di backend, ad esempio se il modello decide di chiamare fetch_api_patient_appointment allora qui devo avere un if che riconosce questo nome 
-        e chiama la funzione reale per prendere i dati del paziente, 
-        se invece il modello decide di chiamare un'altra funzione allora qui devo avere un altro if per riconoscere quel nome e chiamare la funzione corrispondente, ecc.
-        Poi con il risultato ottenuto dalla funzione reale costruisco un nuovo messaggio di tipo "tool" che contiene il risultato della funzione, in questo modo faccio observation injection, 
-        cioè dico al modello "Ecco il risultato della funzione che hai chiamato, 
-        utilizza queste informazioni per rispondere alla domanda dell'utente"
-        _________________________________________
+            Routing delle mie funzioni di backend, ad esempio se il modello decide di chiamare fetch_api_patient_appointment allora qui devo avere un if che riconosce questo nome 
+            e chiama la funzione reale per prendere i dati del paziente, 
+            se invece il modello decide di chiamare un'altra funzione allora qui devo avere un altro if per riconoscere quel nome e chiamare la funzione corrispondente, ecc.
+            Poi con il risultato ottenuto dalla funzione reale costruisco un nuovo messaggio di tipo "tool" che contiene il risultato della funzione, in questo modo faccio observation injection, 
+            cioè dico al modello "Ecco il risultato della funzione che hai chiamato, 
+            utilizza queste informazioni per rispondere alla domanda dell'utente"
+            _________________________________________
 
-        """
-        # qua inizio a fare il routing alle funzioni di backend
+            """
+            # qua inizio a fare il routing alle funzioni di backend
 
-        result = dispatch_tool_call(function_name, parsed_arguments) # qui chiamo la funzione di dispatcher che fa il routing alle funzioni di backend in base al nome della funzione chiamata dal modello, è importante che questa funzione sia ben definita e aggiornata con tutte le funzionalità necessarie per fare il routing corretto, ad esempio riconoscere i nomi delle funzioni, gestire errori, ecc.
-        if "patient_id" in result:
-            state.patient_id = result["patient_id"]
+            result = dispatch_tool_call(function_name, parsed_arguments, state) # qui chiamo la funzione di dispatcher che fa il routing alle funzioni di backend in base al nome della funzione chiamata dal modello, è importante che questa funzione sia ben definita e aggiornata con tutte le funzionalità necessarie per fare il routing corretto, ad esempio riconoscere i nomi delle funzioni, gestire errori, ecc.
+            data = result.get("data", {})
+            if "patient_id" in data:
+                state.patient_id = data["patient_id"]
 
-        if "timing" in result:
-            state.appointment_timing = result["timing"]
+            if "timing" in data:
+                state.appointment_timing = data["timing"]
 
-        if "new_status" in result:
-            state.appointment_status = result["new_status"]
+            if "new_status" in data:
+                state.appointment_status = data["new_status"]
+
+            if "today_appointment" in data:
+                state.appointment_info = data["today_appointment"]
+
+            # qua partono le funzioni di backend, ad esempio se il modello decide di chiamare fetch_api_patient_appointment allora qui devo avere un if che riconosce questo nome e chiama la funzione reale per prendere i dati del paziente, se invece il modello decide di chiamare un'altra funzione allora qui devo avere un altro if per riconoscere quel nome e chiamare la funzione corrispondente, ecc.
+            if function_name == "llm_identify_patient":
+                state.current_intent = "patient_identification"
+                state.current_mode = "identification"
+
+            elif function_name == "llm_execute_fetch_and_update":
+                state.current_intent = "appointment_checkin"
+                state.current_mode = "appointment_checkin"
+
 
         """
         ___________________________________________
@@ -178,7 +214,7 @@ for iteration in range(max_iterations):
 
         # qua costruisco observation memory e tool feedback loop
         # con questo il sisteam di conversazione diventa 'stateful' nel senso che lo stato della conversazione evolve nel tempo
-        state.messages.append(response_message) # qua salvo la decisione/tool request fatta dal modello di chiamare fetch_api_patient_appointment con il patient_id specifico, in questo modo il modello 'ricorda' di aver fatto quella richiesta e può utilizzare questa informazione per generare la risposta finale, ad esempio se l'utente chiede "Quando è l'appuntamento del paziente 101950247?" e il modello chiama fetch_api_patient_appointment con patient_id=101950247, allora quando il modello genera la risposta finale può utilizzare le informazioni ottenute da fetch_api_patient_appointment per rispondere correttamente alla domanda dell'utente, ad esempio "L'appuntamento del paziente 101950247 è alle 15:00"
+        
         # ora faccio observation injection, cioè dico al modello "Ecco il risultato della funzione che hai chiamato, utilizza queste informazioni per rispondere alla domanda dell'utente", in questo modo il modello può utilizzare le informazioni ottenute dalla funzione per generare una risposta più accurata e contestualizzata, ad esempio se l'utente chiede "Quando è l'appuntamento del paziente 101950247?" e il modello chiama fetch_api_patient_appointment con patient_id=101950247 e ottiene come risultato "L'appuntamento del paziente 101950247 è alle 15:00", allora quando il modello genera la risposta finale può utilizzare questa informazione per rispondere correttamente alla domanda dell'utente, ad esempio "L'appuntamento del paziente 101950247 è alle 15:00"
         state.messages.append({
             "role": "tool", # questo serve per far capire al modello che questo messaggio proviene da un tool
