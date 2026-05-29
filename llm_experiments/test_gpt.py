@@ -225,3 +225,6 @@ for iteration in range(max_iterations):
         print("\nUpdated messages with tool response:\n")
         for msg in state.messages:
             print(msg)
+            
+else: # se il loop delle iterazioni termina naturalmente posso mettere else
+    print("\nReached maximum iterations without a conclusive response from the model.")
