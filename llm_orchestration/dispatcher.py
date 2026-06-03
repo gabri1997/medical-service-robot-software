@@ -28,6 +28,9 @@ def dispatch_tool_call(function_name,parsed_arguments, state):
 
         patient_id = llm_identify_patient()
         print(f"\nResult from TOOL function: {patient_id}")
-        return {"success": True, "event": "Patient ID identified.", "data": {"patient_id": patient_id}}
+        return {"success": True, 
+                "event": "Patient identified", 
+                "data": {"patient_id": patient_id}
+     }
 
     raise ValueError(f"Unknown tool: {function_name}")

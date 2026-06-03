@@ -12,6 +12,10 @@ from llm_tools.wrappers import execute_fetch_and_update # qui importo la funzion
 from llm_orchestration.policies import validate_tool_call # qui importo la funzione di policy che verifica se è il momento giusto per fare il check-in dell'appuntamento, è importante che questa funzione sia ben definita e aggiornata con tutte le regole necessarie per prendere decisioni corrette, ad esempio verificare l'orario dell'appuntamento, verificare lo stato del paziente, ecc.
 from llm_orchestration.dispatcher import dispatch_tool_call # qui importo la funzione di dispatcher che fa il routing alle funzioni di backend in base al nome della funzione chiamata dal modello, è importante che questa funzione sia ben definita e aggiornata con tutte le funzionalità necessarie per fare il routing corretto, ad esempio riconoscere i nomi delle funzioni, gestire errori, ecc.
 from llm_state.agent_state import AgentState # qui importo la classe AgentState che rappresenta lo stato del mio agente, è importante che questa classe sia ben definita e aggiornata con tutte le informazioni necessarie per rappresentare lo stato del robot, ad esempio informazioni sul paziente, informazioni sugli appuntamenti, informazioni sulla sessione, ecc.
+from llm_state.transitions import change_mode
+from llm_runtime.events import handle_event
+from llm_runtime.goals import set_goal
+
 """
 ___________________________________________________
 
@@ -82,6 +86,13 @@ state.add_message(
     "user",
     "Quando è il mio appuntamento?"
 )
+user_message = state.messages[-1]["content"] # prendo l'ultimo messaggio dell'utente, in questo caso "Quando è il mio appuntamento?", è importante che questo messaggio sia ben definito e rappresentativo delle interazioni che il robot potrebbe avere con i pazienti, ad esempio potrebbe essere un messaggio più complesso come "Sono arrivato, puoi dirmi quando è il mio appuntamento?" o "Non riesco a trovarti nel sistema. Puoi ripetere lentamente il cognome?", ecc.
+if "appuntamento" in user_message.lower():
+    set_goal(state, "check_appointment") # qui setto il goal del robot in check_appointment, è importante che questo goal sia ben definito e rappresentativo degli obiettivi che il robot deve raggiungere, ad esempio potrebbe essere un goal più complesso come "identificare il paziente e verificare lo stato dell'appuntamento" o "gestire l'ambiguità nel riconoscimento del paziente", ecc.
+
+print(f"\nCURRENT GOAL: "f"{state.current_goal}")
+
+
 
 # # conversazione base
 # messages = [
@@ -151,7 +162,7 @@ for iteration in range(max_iterations):
             print(f"Reason: {reason}")
             result = {
                 "success": False,
-                "event": "Tool call validation failed",
+                "event": "tool_validation_failed",
                 "data": {
                     "function_name": function_name,
                     "reason": reason
@@ -173,9 +184,19 @@ for iteration in range(max_iterations):
 
             """
             # qua inizio a fare il routing alle funzioni di backend
-
             result = dispatch_tool_call(function_name, parsed_arguments, state) # qui chiamo la funzione di dispatcher che fa il routing alle funzioni di backend in base al nome della funzione chiamata dal modello, è importante che questa funzione sia ben definita e aggiornata con tutte le funzionalità necessarie per fare il routing corretto, ad esempio riconoscere i nomi delle funzioni, gestire errori, ecc.
             data = result.get("data", {})
+
+            event = result.get("event", "Unknown event")
+          
+            print(
+                f"\nCURRENT GOAL: "
+                f"{state.current_goal}"
+            )
+
+
+
+
             if "patient_id" in data:
                 state.patient_id = data["patient_id"]
 
@@ -188,17 +209,17 @@ for iteration in range(max_iterations):
             if "today_appointment" in data:
                 state.appointment_info = data["today_appointment"]
 
-            # qua partono le funzioni di backend, ad esempio se il modello decide di chiamare fetch_api_patient_appointment allora qui devo avere un if che riconosce questo nome e chiama la funzione reale per prendere i dati del paziente, se invece il modello decide di chiamare un'altra funzione allora qui devo avere un altro if per riconoscere quel nome e chiamare la funzione corrispondente, ecc.
-            if function_name == "llm_identify_patient":
-                state.current_intent = "patient_identification"
-                state.current_mode = "identification"
+            # # qua partono le funzioni di backend, ad esempio se il modello decide di chiamare fetch_api_patient_appointment allora qui devo avere un if che riconosce questo nome e chiama la funzione reale per prendere i dati del paziente, se invece il modello decide di chiamare un'altra funzione allora qui devo avere un altro if per riconoscere quel nome e chiamare la funzione corrispondente, ecc.
+            # if function_name == "llm_identify_patient":
+            #     state.current_intent = "patient_identification"
+            #     change_mode(state, "identification") # qui cambio lo stato del robot in identification, è importante che questa funzione sia ben definita e aggiornata con tutte le funzionalità necessarie per gestire i cambi di stato del robot in modo coerente e sicuro, ad esempio verificare che il cambio di stato sia consentito, gestire transizioni complesse, ecc.
 
-            elif function_name == "llm_execute_fetch_and_update":
-                state.current_intent = "appointment_checkin"
-                state.current_mode = "appointment_checkin"
+            # elif function_name == "llm_execute_fetch_and_update":
+            #     state.current_intent = "appointment_checkin"
+            #     change_mode(state, "appointment_checkin")
 
-
-        """
+            print(f"\nCURRENT MODE: "f"{state.current_mode}")
+            """
         ___________________________________________
 
         Observation injection, cioè dico al modello "Ecco il risultato della funzione 
@@ -225,6 +246,6 @@ for iteration in range(max_iterations):
         print("\nUpdated messages with tool response:\n")
         for msg in state.messages:
             print(msg)
-            
+
 else: # se il loop delle iterazioni termina naturalmente posso mettere else
     print("\nReached maximum iterations without a conclusive response from the model.")

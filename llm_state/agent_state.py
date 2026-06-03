@@ -12,6 +12,8 @@ class AgentState:
         ]
 
         self.current_mode = 'idle'
+        # aggiungiamo un goal, quello che il robto cerca di ottenere
+        self.current_goal = None
 
         # patient info 
         self.patient_id = None
@@ -22,6 +24,8 @@ class AgentState:
         self.session_active = True # questo attributo mi serve per capire se la conversazione con l'utente è ancora attiva o no 
         # intent info
         self.current_intent = None
+       
+
 
     def add_message(self, role, content):
 
