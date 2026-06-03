@@ -16,6 +16,14 @@ def handle_event(event, state):
     elif event == "Conversation with patient completed":
         change_mode(state, "completed")
         print(f"\nEvent: {event} - Transitioning to completed mode.")
-    
+
+    elif event == "tool_validation_failed":
+
+        print(
+            "\nTool validation failed. "
+            "No state transition performed."
+        )
+
+
     else:
         print(f"\nUnknown event: {event}")

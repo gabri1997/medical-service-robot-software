@@ -88,7 +88,7 @@ state.add_message(
 )
 user_message = state.messages[-1]["content"] # prendo l'ultimo messaggio dell'utente, in questo caso "Quando è il mio appuntamento?", è importante che questo messaggio sia ben definito e rappresentativo delle interazioni che il robot potrebbe avere con i pazienti, ad esempio potrebbe essere un messaggio più complesso come "Sono arrivato, puoi dirmi quando è il mio appuntamento?" o "Non riesco a trovarti nel sistema. Puoi ripetere lentamente il cognome?", ecc.
 if "appuntamento" in user_message.lower():
-    set_goal(state, "check_appointment") # qui setto il goal del robot in check_appointment, è importante che questo goal sia ben definito e rappresentativo degli obiettivi che il robot deve raggiungere, ad esempio potrebbe essere un goal più complesso come "identificare il paziente e verificare lo stato dell'appuntamento" o "gestire l'ambiguità nel riconoscimento del paziente", ecc.
+    set_goal(state, "check_patient_appointment") # qui setto il goal del robot in check_appointment, è importante che questo goal sia ben definito e rappresentativo degli obiettivi che il robot deve raggiungere, ad esempio potrebbe essere un goal più complesso come "identificare il paziente e verificare lo stato dell'appuntamento" o "gestire l'ambiguità nel riconoscimento del paziente", ecc.
 
 print(f"\nCURRENT GOAL: "f"{state.current_goal}")
 
@@ -157,6 +157,8 @@ for iteration in range(max_iterations):
 
         # qua partono le policy di validazione
         validation_result, reason = validate_tool_call(function_name, state) # qui chiamo la funzione di policy che verifica se è il momento giusto per fare il check-in dell'appuntamento, è importante che questa funzione sia ben definita e aggiornata con tutte le regole necessarie per prendere decisioni corrette, ad esempio verificare l'orario dell'appuntamento, verificare lo stato del paziente, ecc.
+        event = None
+        data = {}
         if validation_result == False:
             print(f"\nTool call '{function_name}' is not valid in the current context. Skipping execution.")
             print(f"Reason: {reason}")
@@ -187,20 +189,20 @@ for iteration in range(max_iterations):
             result = dispatch_tool_call(function_name, parsed_arguments, state) # qui chiamo la funzione di dispatcher che fa il routing alle funzioni di backend in base al nome della funzione chiamata dal modello, è importante che questa funzione sia ben definita e aggiornata con tutte le funzionalità necessarie per fare il routing corretto, ad esempio riconoscere i nomi delle funzioni, gestire errori, ecc.
             data = result.get("data", {})
 
-            event = result.get("event", "Unknown event")
-          
+            event = result.get("event")
+            
+        
+
             print(
                 f"\nCURRENT GOAL: "
                 f"{state.current_goal}"
             )
 
-
-
-
             if "patient_id" in data:
                 state.patient_id = data["patient_id"]
 
             if "timing" in data:
+                
                 state.appointment_timing = data["timing"]
 
             if "new_status" in data:
@@ -208,6 +210,9 @@ for iteration in range(max_iterations):
 
             if "today_appointment" in data:
                 state.appointment_info = data["today_appointment"]
+            
+        if event:
+            handle_event(event,state) # qui chiamo la funzione di gestione degli eventi che aggiorna lo stato del robot in base all'evento ricevuto, è importante che questa funzione sia ben definita e aggiornata con tutte le regole necessarie per gestire correttamente gli eventi, ad esempio se ricevo l'evento "patient_identified" allora aggiorno lo stato del robot con il patient_id e cambio il mode in "patient_identified", se ricevo l'evento "appointment_checked_in" allora aggiorno lo stato del robot con lo stato dell'appuntamento e cambio il mode in "appointment_checked_in", ecc.
 
             # # qua partono le funzioni di backend, ad esempio se il modello decide di chiamare fetch_api_patient_appointment allora qui devo avere un if che riconosce questo nome e chiama la funzione reale per prendere i dati del paziente, se invece il modello decide di chiamare un'altra funzione allora qui devo avere un altro if per riconoscere quel nome e chiamare la funzione corrispondente, ecc.
             # if function_name == "llm_identify_patient":
