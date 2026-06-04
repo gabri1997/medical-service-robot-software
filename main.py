@@ -106,7 +106,7 @@ def identify_patient():
             notify_event("Patient_not_recognized")
             return {
                 "success": False,
-                "event": "patient_not_recognized",
+                "event": "Patient_not_recognized",
                 "data": {}
             }
         

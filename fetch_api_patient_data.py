@@ -131,7 +131,7 @@ def fetch_api_patient_data(patient_id):
         print("Failed to retrieve appointments.")
         return {
             "success": False,
-            "event": "appointment_service_unavailable",
+            "event": "Appointment_service_unavailable",
             "data": {
                 "patient_id": patient_id
             }
@@ -168,7 +168,7 @@ def execute_fetch_and_update(patient_id):
         notify_event("Patient_has_no_appointments_today", {"patient_id": patient_id})
         return {
                 "success": False,
-                "event": "no_appointment_today",
+                "event": "No_appointment_today",
                 "data": {
                     "patient_id": patient_id
                 }
@@ -179,7 +179,7 @@ def execute_fetch_and_update(patient_id):
             print("Non sono riuscito ad aggiornare lo stato dell'appuntamento.")
             return {
                 "success": False,
-                "event": "appointment_update_failed",
+                "event": "Appointment_update_failed",
                 "data": {
                     "patient_id": patient_id
                 }

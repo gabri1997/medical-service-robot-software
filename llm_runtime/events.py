@@ -23,7 +23,18 @@ def handle_event(event, state):
             "\nTool validation failed. "
             "No state transition performed."
         )
+    elif event == "Patient_not_recognized":
+        change_mode(state, "identification_failed")
 
+    elif event == "No_appointment_today":
+        change_mode(state, "completed")
+        set_goal(state, None)
+
+    elif event == "Appointment_service_unavailable":
+        change_mode(state, "error")
+
+    elif event == "Appointment_update_failed":
+        change_mode(state, "error")
 
     else:
         print(f"\nUnknown event: {event}")
