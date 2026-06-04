@@ -89,6 +89,9 @@ state.add_message(
 user_message = state.messages[-1]["content"] # prendo l'ultimo messaggio dell'utente, in questo caso "Quando è il mio appuntamento?", è importante che questo messaggio sia ben definito e rappresentativo delle interazioni che il robot potrebbe avere con i pazienti, ad esempio potrebbe essere un messaggio più complesso come "Sono arrivato, puoi dirmi quando è il mio appuntamento?" o "Non riesco a trovarti nel sistema. Puoi ripetere lentamente il cognome?", ecc.
 if "appuntamento" in user_message.lower():
     set_goal(state, "check_patient_appointment") # qui setto il goal del robot in check_appointment, è importante che questo goal sia ben definito e rappresentativo degli obiettivi che il robot deve raggiungere, ad esempio potrebbe essere un goal più complesso come "identificare il paziente e verificare lo stato dell'appuntamento" o "gestire l'ambiguità nel riconoscimento del paziente", ecc.
+else:
+    # qua ci saranno tutti i goals da definire
+    set_goal(state, "general_assistance") # qui setto un goal generico di assistenza, è importante che questo goal sia ben definito e rappresentativo degli obiettivi che il robot deve raggiungere in caso di richieste più generiche o non specifiche, ad esempio potrebbe essere un goal come "fornire informazioni generali", "gestire richieste di aiuto", ecc.
 
 print(f"\nCURRENT GOAL: "f"{state.current_goal}")
 
@@ -198,18 +201,27 @@ for iteration in range(max_iterations):
                 f"{state.current_goal}"
             )
 
-            if "patient_id" in data:
-                state.patient_id = data["patient_id"]
+            if data is not None:
 
-            if "timing" in data:
-                
-                state.appointment_timing = data["timing"]
+                if "patient_id" in data:
+                    state.patient_id = data["patient_id"]
+                else:
+                    pass
 
-            if "new_status" in data:
-                state.appointment_status = data["new_status"]
+                if "timing" in data:
+                    state.appointment_timing = data["timing"]
+                else:
+                    pass
 
-            if "today_appointment" in data:
-                state.appointment_info = data["today_appointment"]
+                if "new_status" in data:
+                    state.appointment_status = data["new_status"]
+                else:
+                    pass
+
+                if "today_appointment" in data:
+                    state.appointment_info = data["today_appointment"]
+                else:
+                    pass
             
         if event:
             handle_event(event,state) # qui chiamo la funzione di gestione degli eventi che aggiorna lo stato del robot in base all'evento ricevuto, è importante che questa funzione sia ben definita e aggiornata con tutte le regole necessarie per gestire correttamente gli eventi, ad esempio se ricevo l'evento "patient_identified" allora aggiorno lo stato del robot con il patient_id e cambio il mode in "patient_identified", se ricevo l'evento "appointment_checked_in" allora aggiorno lo stato del robot con lo stato dell'appuntamento e cambio il mode in "appointment_checked_in", ecc.
