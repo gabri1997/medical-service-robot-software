@@ -7,7 +7,13 @@ ALLOWED_TRANSITIONS = {
 
     "identification": [
         "patient_identified",
+        "identification_failed",
         "idle"
+    ],
+
+    "identification_failed": [
+        "identification",
+        "completed"
     ],
 
     "patient_identified": [
@@ -16,14 +22,18 @@ ALLOWED_TRANSITIONS = {
     ],
 
     "appointment_checkin": [
-        "completed"
+        "completed",
+        "error"
+    ],
+
+    "error": [
+        "idle"
     ],
 
     "completed": [
         "idle"
     ]
 }
-
 def can_transition(current_state, new_state):
 
     allowed = ALLOWED_TRANSITIONS.get(current_state, [])
