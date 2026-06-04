@@ -129,7 +129,13 @@ def fetch_api_patient_data(patient_id):
     response = requests.get(appointment_url, headers=headers)
     if response.status_code != 200:
         print("Failed to retrieve appointments.")
-        return
+        return {
+            "success": False,
+            "event": "appointment_service_unavailable",
+            "data": {
+                "patient_id": patient_id
+            }
+        }
 
     appointments = response.json()
     patient_appointments = [appt for appt in appointments["data"] if str(appt["patientId"]) == str(patient_id)]
@@ -152,20 +158,37 @@ def get_patient_info_from_db(db_path, patient_id):
 def execute_fetch_and_update(patient_id):
     # qui prendo tutti gli appuntamenti del paziente se ne ha
     patient_appointments = fetch_api_patient_data(patient_id)
+    if (isinstance(patient_appointments, dict) and patient_appointments.get("success") is False):
+        return patient_appointments
     # qui verifico se tra gli appuntamenti ne ha uno oggi e nel caso controllo il timing per capire se è in orario o no 
     today_appointment, timing = find_today_appointment(patient_appointments, patient_id)
     print(f"Appuntamento di oggi per il paziente {patient_id}: {today_appointment} alle {timing}")
     if today_appointment is None:
         print(f"Il paziente {patient_id} non ha appuntamenti oggi.")
-        notify_event("Patient_has_no_appointments", {"patient_id": patient_id})
-        return
+        notify_event("Patient_has_no_appointments_today", {"patient_id": patient_id})
+        return {
+                "success": False,
+                "event": "no_appointment_today",
+                "data": {
+                    "patient_id": patient_id
+                }
+            }
     else:
         updated, new_status, appointment_timing = change_apointment_status(today_appointment, timing)
     if not updated:
-        print("Non sono riuscito ad aggiornare lo stato dell'appuntamento.")
-        return
+            print("Non sono riuscito ad aggiornare lo stato dell'appuntamento.")
+            return {
+                "success": False,
+                "event": "appointment_update_failed",
+                "data": {
+                    "patient_id": patient_id
+                }
+            }
     # dovrei rifare il fetch dei dati del paziente per vedere se lo stato dell'appuntamento è stato aggiornato correttamente
     patient_appointments = fetch_api_patient_data(patient_id)
+    if (isinstance(patient_appointments, dict) and patient_appointments.get("success") is False):
+        print("Non sono riuscito a recuperare gli appuntamenti del paziente dopo l'aggiornamento.")
+        return patient_appointments
     today_appointment, timing = find_today_appointment(patient_appointments, patient_id)
     print(f"Appuntamento con stato aggiornato di oggi per il paziente {patient_id}: {today_appointment} alle {timing}")
     
@@ -185,11 +208,15 @@ def execute_fetch_and_update(patient_id):
         "timing": appointment_timing
     })
     return {
-    "patient_id": patient_id,
-    "today_appointment": today_appointment,
-    "timing": appointment_timing,
-    "new_status": new_status
-}
+        "success": True,
+        "event": "appointment_updated",
+        "data": {
+            "patient_id": patient_id,
+            "today_appointment": today_appointment,
+            "timing": appointment_timing,
+            "new_status": new_status
+        }
+    }
         
 
 if __name__ == "__main__":

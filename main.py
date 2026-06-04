@@ -104,19 +104,24 @@ def identify_patient():
         if patient_id is None:
             print("Non sono riuscito a riconoscere il paziente neanche con il vocale, ti prego di avvicinarti alla telecamera per un nuovo tentativo di riconoscimento facciale ...")
             notify_event("Patient_not_recognized")
-            return None
+            return {
+                "success": False,
+                "event": "patient_not_recognized",
+                "data": {}
+            }
         
     return patient_id
 
 if __name__ == "__main__":
 
-    patient_id = identify_patient()
-
-    if patient_id is not None:
+    patient_result = identify_patient()
+    if (isinstance(patient_result, dict)and patient_result.get("success") is False):
+        print(f"Patient identification failed: {patient_result}")
+    else:
+        patient_id = patient_result
         print(f"Patient ID riconosciuto: {patient_id}")
         result = execute_fetch_and_update(patient_id)
         print(f"Result from TOOL function: {result}")
-
-    
+        
     
     
