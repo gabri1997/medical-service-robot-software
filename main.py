@@ -76,6 +76,9 @@ def identify_patient():
     cap = cv2.VideoCapture(video_path)
     
     # costruisco il database di embedding a partire dalle immagini dei pazienti solo se non è già stato costruito
+
+    # TODO: 
+    # Aggiungere le immagini dei pazienti tramite Alfadocs e poi fare la chiamata API su Documents per recupere il documento immagine allegato al paziente 
     if not os.path.exists(destination_directory):
         build_embedding_database(db_directory, destination_directory) # servirà una logica per aggiornare il database quando ci sono nuovi pazienti o nuove immagini
     
@@ -100,7 +103,6 @@ def identify_patient():
         model = WhisperModel("small", device="cpu", compute_type="int8")
         audio_path = os.path.join(audio_folder, 'gabriele_rosati.mp3')
         patient_id = execute_text_recognition(audio_path, model, db_file)
-
         if patient_id is None:
             print("Non sono riuscito a riconoscere il paziente neanche con il vocale, ti prego di avvicinarti alla telecamera per un nuovo tentativo di riconoscimento facciale ...")
             notify_event("Patient_not_recognized")
@@ -109,7 +111,7 @@ def identify_patient():
                 "event": "Patient_not_recognized",
                 "data": {}
             }
-        
+    
     return patient_id
 
 if __name__ == "__main__":

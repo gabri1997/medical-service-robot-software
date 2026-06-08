@@ -193,8 +193,6 @@ for iteration in range(max_iterations):
             data = result.get("data", {})
 
             event = result.get("event")
-            
-        
 
             print(
                 f"\nCURRENT GOAL: "
