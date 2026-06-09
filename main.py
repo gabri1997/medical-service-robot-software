@@ -1,5 +1,6 @@
 from fetch_api_patient_data import execute_fetch_and_update
 from img_db_builder import build_embedding_database
+from collect_imgs_from_alfadocs import collect_imgs_from_alfadocs
 from text_recognition import execute_text_recognition
 from llm_state.agent_state import AgentState
 from cam_recognition import cam_recognition
@@ -54,10 +55,6 @@ from config import FACE_RECOGNITION_THRESHOLD
 # - capire se va bene usare la levenshtein distance come metrica di similarità testuale
 # - capire se serve disambiguare i pazienti se fallisce il riconoscimento facciale e quello vocale da piu risultati
 
-def get_patient_name(patient_id):
-    # qui va la logica per recuperare il nome del paziente a partire dal patient_id, ad esempio facendo una query al database o una chiamata API
-    return "Gabriele"
-
 
 def identify_patient():
     BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -85,8 +82,16 @@ def identify_patient():
     # TODO: 
     # Aggiungere le immagini dei pazienti tramite Alfadocs e poi fare la chiamata API su Documents per recupere il documento immagine allegato al paziente 
     if not os.path.exists(destination_directory):
+        print("Costruisco il database di embedding a partire dalle immagini dei pazienti ...")
+        collect_imgs_from_alfadocs(db_directory)
         build_embedding_database(db_directory, destination_directory) # servirà una logica per aggiornare il database quando ci sono nuovi pazienti o nuove immagini
-    
+    else:
+        print("Database di embedding già esistente, procedo con il riconoscimento del paziente ...")
+    #----------------------------------------------
+    # Questo era il test con il dataset locale creato manualmente
+    # if not os.path.exists(destination_directory):
+    #     build_embedding_database(db_directory, destination_directory) # servirà una logica per aggiornare il database quando ci sono nuovi pazienti o nuove immagini
+    #----------------------------------------------
     # Stop policy webcam: massimo frame, campionamento e uscita anticipata su score alto.
     app = FaceAnalysis(name="buffalo_l", providers=["CPUExecutionProvider"])
     patient_id, best_score = cam_recognition(
@@ -118,8 +123,7 @@ def identify_patient():
             }
         
     # qui potremmo ricavare nome e cognome del paziente a partire dal patient_id
-    nome = get_patient_name(patient_id)
-    cognome = get_patient_surname(patient_id)
+   
 
     
     return patient_id
