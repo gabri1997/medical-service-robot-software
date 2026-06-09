@@ -99,7 +99,7 @@ def identify_patient():
         debug_frames,
         max_frames=120,
         process_every_n_frames=3,
-        early_stop_score=0.72,
+        early_stop_score=0.73,
     )
     cap.release()
 
