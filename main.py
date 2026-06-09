@@ -54,6 +54,11 @@ from config import FACE_RECOGNITION_THRESHOLD
 # - capire se va bene usare la levenshtein distance come metrica di similarità testuale
 # - capire se serve disambiguare i pazienti se fallisce il riconoscimento facciale e quello vocale da piu risultati
 
+def get_patient_name(patient_id):
+    # qui va la logica per recuperare il nome del paziente a partire dal patient_id, ad esempio facendo una query al database o una chiamata API
+    return "Gabriele"
+
+
 def identify_patient():
     BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -111,6 +116,11 @@ def identify_patient():
                 "event": "Patient_not_recognized",
                 "data": {}
             }
+        
+    # qui potremmo ricavare nome e cognome del paziente a partire dal patient_id
+    nome = get_patient_name(patient_id)
+    cognome = get_patient_surname(patient_id)
+
     
     return patient_id
 

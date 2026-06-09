@@ -115,6 +115,8 @@ if __name__ == "__main__":
     2 - Organizzare il DB locale usando patient_id come chiave
     3 - Calcolare gli embedding-Done
     4 - Fare recognition con quel DB locale-Done
+
+    Scoperta successiva che rende inutile tutta questa parte: su Alfadocs si possono caricare e scaricare documenti associati al paziente quindi potrei scaricare direttamente le immagini dai documenti, lo faccio nel nuovo script collect_imgs_from_alfadocs.py 
     """
     # questa parte è in stallo perchè non posso prendere le immagini da AlfaDocs, ma una volta che le ho posso costruire il database locale e fare recognition 
     # db_directory = 'db_imgs_alfadocs'

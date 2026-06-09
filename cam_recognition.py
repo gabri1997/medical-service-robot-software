@@ -43,7 +43,6 @@ def cam_recognition(
     db_embeddings = embedding['embeddings']
     db_labels = embedding['labels']
 
-
     # qui calcolo live gli embedding della webcam e li confronto con quelli del database, se la similarità è sopra la soglia allora è un match
     app.prepare(ctx_id=0, det_size=(640, 640))
 
