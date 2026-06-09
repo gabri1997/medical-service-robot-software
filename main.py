@@ -13,35 +13,35 @@ from notifier import notify_event
 from config import FACE_RECOGNITION_THRESHOLD
 
 """
-    Pipeline:
-        - The patient arrives at the system.
-        - Face recognition is attempted.
-        - If the face is recognized with high confidence (>FACE_RECOGNITION_THRESHOLD), the corresponding patient_id is retrieved.
-        - If the face is not recognized (or the confidence score is too low), the system asks for the patient’s name and surname.
-        - The spoken input is transcribed into text.
-        - The text is normalized to a consistent format.
-        - The system searches the local database using a similarity metric (e.g., Levenshtein distance).
-        - Once the correct patient_id is identified, an API call is made to retrieve the patient’s appointments.
+Pipeline:
+    - The patient arrives at the system.
+    - Face recognition is attempted.
+    - If the face is recognized with high confidence (>FACE_RECOGNITION_THRESHOLD), the corresponding patient_id is retrieved.
+    - If the face is not recognized (or the confidence score is too low), the system asks for the patient’s name and surname.
+    - The spoken input is transcribed into text.
+    - The text is normalized to a consistent format.
+    - The system searches the local database using a similarity metric (e.g., Levenshtein distance).
+    - Once the correct patient_id is identified, an API call is made to retrieve the patient’s appointments.
 
-    For now the system is basically deterministic AI : 
+For now the system is basically deterministic AI : 
     Face recognition → if score > threshold → patient_id
         else → Whisper
         else → failure
         and this is quiet good for detection, recognition, matching, API calls, but for what concerns ambiguity, conversation, exceptions, context, human decisions static rules are not enough
-    To improve the software could do:
+To improve the software could do:
     - Intent understanding (utente che dice: sono arrivato un po in anticipo)
     - Ambiguity resolution ("Trovati 2 pazienti: Mario Rossi") 
     - Action selection (Utente: "Vorrei spostare l'appuntamento")
     - Conversational state: ("Intendo quello di domani mattina", LLM capisce a cosa si riferisce quello)
     - Human-like fallback: ("Non riesco a trovarti nel sistema. Puoi ripetere lentamente il cognome?")
 
-    The correct architecture could be: 
+The correct architecture could be: 
     Computer Vision → deterministic
     Speech-to-text → deterministic
     Database/API → deterministic
     Business rules → deterministic
 
-    LLM:
+LLM:
     - understand
     - decide
     - route
@@ -77,9 +77,6 @@ def identify_patient():
     video_path = os.path.join(video_folder, 'test_video2.mp4')
     cap = cv2.VideoCapture(video_path)
     
-    # costruisco il database di embedding a partire dalle immagini dei pazienti solo se non è già stato costruito
-
-    # TODO: 
     # Aggiungere le immagini dei pazienti tramite Alfadocs e poi fare la chiamata API su Documents per recupere il documento immagine allegato al paziente 
     if not os.path.exists(destination_directory):
         print("Costruisco il database di embedding a partire dalle immagini dei pazienti ...")
@@ -92,6 +89,7 @@ def identify_patient():
     # if not os.path.exists(destination_directory):
     #     build_embedding_database(db_directory, destination_directory) # servirà una logica per aggiornare il database quando ci sono nuovi pazienti o nuove immagini
     #----------------------------------------------
+
     # Stop policy webcam: massimo frame, campionamento e uscita anticipata su score alto.
     app = FaceAnalysis(name="buffalo_l", providers=["CPUExecutionProvider"])
     patient_id, best_score = cam_recognition(
