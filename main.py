@@ -57,8 +57,8 @@ LLM:
 
 
 def identify_patient():
-    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
     db_directory = os.path.join(BASE_DIR, 'db_imgs')
     destination_directory = os.path.join(BASE_DIR, 'db_local_embeddings')
     db_file = os.path.join(BASE_DIR, 'patient_data.db')
@@ -121,9 +121,7 @@ def identify_patient():
             }
         
     # qui potremmo ricavare nome e cognome del paziente a partire dal patient_id
-   
-
-    
+       
     return patient_id
 
 if __name__ == "__main__":
@@ -132,6 +130,7 @@ if __name__ == "__main__":
     if (isinstance(patient_result, dict)and patient_result.get("success") is False):
         print(f"Patient identification failed: {patient_result}")
     else:
+        print(f"Patient identification successful: {patient_result}")
         patient_id = patient_result
         print(f"Patient ID riconosciuto: {patient_id}")
         result = execute_fetch_and_update(patient_id)
