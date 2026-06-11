@@ -130,7 +130,49 @@ def cam_recognition(
 
     return frames_best_label, frames_best_score
 
+def identify_from_image(app, embedding, image):
+    
+    if image is None:
+        print("No image provided for recognition.")
+        return {
+            "patient_id": None,
+            "score": 0.0
+        }
 
+    # image arriva da gradio e deve essere un numpy array
+    faces = app.get(image)
+    if not faces:
+        print("No faces detected in the provided image.")
+        return {
+            "patient_id": None,
+            "score": 0.0
+        }
+    face = max(
+        faces,
+        key=lambda x: (x.bbox[2]-x.bbox[0]) * (x.bbox[3]-x.bbox[1])
+    )
+
+    db_embeddings = embedding['embeddings']
+    db_labels = embedding['labels']
+
+    emb = face.embedding.astype(np.float32)
+    emb = emb / np.linalg.norm(emb)
+    sims = np.dot(db_embeddings, emb) / (np.linalg.norm(db_embeddings, axis=1) * np.linalg.norm(emb))
+    best_idx = np.argmax(sims)
+    best_score = float(sims[best_idx])
+    if best_score < 0.5:
+        print(f"Low confidence score: {best_score:.2f}. No reliable match found.")
+        return {
+            "patient_id": None,
+            "score": best_score
+        }
+    best_label = db_labels[best_idx]
+    print(f"Best match: {best_label} with score {best_score:.2f}")
+    return {
+        "patient_id": str(best_label),
+        "score": float(best_score)
+    }
+    
 
 if __name__ == "__main__":
 

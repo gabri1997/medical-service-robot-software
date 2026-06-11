@@ -3,12 +3,13 @@ from img_db_builder import build_embedding_database
 from collect_imgs_from_alfadocs import collect_imgs_from_alfadocs
 from text_recognition import execute_text_recognition
 from llm_state.agent_state import AgentState
-from cam_recognition import cam_recognition
+from cam_recognition import cam_recognition, identify_from_image
 from local_db_builder import db_creation
 from faster_whisper import WhisperModel
 from insightface.app import FaceAnalysis
 import cv2
 import os
+import numpy as np
 from notifier import notify_event
 from config import FACE_RECOGNITION_THRESHOLD
 
@@ -56,6 +57,7 @@ LLM:
 # - capire se serve disambiguare i pazienti se fallisce il riconoscimento facciale e quello vocale da piu risultati
 
 
+
 def identify_patient():
 
     BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -72,12 +74,8 @@ def identify_patient():
         db_creation(db_file)
     else:
         print("Database già esistente, procedo con il riconoscimento del paziente ...")
-
     
-    video_path = os.path.join(video_folder, 'test_video2.mp4')
-    cap = cv2.VideoCapture(video_path)
-    
-    # Aggiungere le immagini dei pazienti tramite Alfadocs e poi fare la chiamata API su Documents per recupere il documento immagine allegato al paziente 
+    # Aggiungere le immagini dei pazienti tramite Alfadocs e poi fare la chiamata API su Documents per recupere il documento immagine allegato al paziente (per ognuno)
     if not os.path.exists(destination_directory):
         print("Costruisco il database di embedding a partire dalle immagini dei pazienti ...")
         collect_imgs_from_alfadocs(db_directory)
@@ -90,7 +88,13 @@ def identify_patient():
     #     build_embedding_database(db_directory, destination_directory) # servirà una logica per aggiornare il database quando ci sono nuovi pazienti o nuove immagini
     #----------------------------------------------
 
+
+
+    #------------------------------------------------------------------------
+    # Codice che usa il video demo e non la webcam 
     # Stop policy webcam: massimo frame, campionamento e uscita anticipata su score alto.
+    video_path = os.path.join(video_folder, 'test_video2.mp4')
+    cap = cv2.VideoCapture(video_path)
     app = FaceAnalysis(name="buffalo_l", providers=["CPUExecutionProvider"])
     patient_id, best_score = cam_recognition(
         app,
@@ -102,7 +106,9 @@ def identify_patient():
         early_stop_score=0.73,
     )
     cap.release()
-
+    #------------------------------------------------------------------------
+    
+    
     # patient_id = None # per debuggare la parte di text recognition, forzo il riconoscimento facciale a non funzionare, così posso testare la parte di riconoscimento vocale e di similarità testuale
     # qui sarà da capire che soglia mettere o se il ragionamento è corretto
     if patient_id is None or best_score is None or best_score < FACE_RECOGNITION_THRESHOLD: # se non riesco a riconoscere il paziente con la webcam, o se il punteggio è troppo basso, faccio il fallback con il vocale
