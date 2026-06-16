@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Medical Service Robot</title>
+    
+    <!-- Link per le Icone (FontAwesome) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
+    <!-- CSS Integrato per non perdere gli stili -->
+    <style>
+        :root {
+            --bg-color: #f0f4f8;
+            --card-bg: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --primary: #2b5caa;
+            --primary-hover: #778ece;
+            --success: #07744f;
+            --success-hover: #06b180;
+            --secondary: #64748b;
+            --secondary-hover: #475569;
+            --accent-glow: rgba(59, 130, 246, 0.15);
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .dashboard-container {
+            width: 100%;
+            max-width: 1200px;
+            background: var(--card-bg);
+            border-radius: 24px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.04);
+            padding: 30px;
+            box-sizing: border-box;
+        }
+
+        .main-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 20px;
+            margin-bottom: 25px;
+        }
+
+        .main-header h1 {
+            font-size: 24px;
+            margin: 0;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .main-header h1 i {
+            color: var(--primary);
+        }
+
+        .badge {
+            background: #dbeafe;
+            color: #3f2d6e;
+            padding: 6px 14px;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 13px;
+            letter-spacing: 0.5px;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1.4fr;
+            gap: 30px;
+        }
+
+        @media (max-width: 900px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .card {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 20px;
+        }
+
+        .card h2 {
+            font-size: 18px;
+            margin-top: 0;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--text-main);
+        }
+
+        .step {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 14px;
+            background: var(--card-bg);
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            margin-bottom: 12px;
+            font-weight: 500;
+        }
+
+        .step-number {
+            background: var(--primary);
+            color: white;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .buttons-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .btn {
+            border: none;
+            border-radius: 12px;
+            padding: 16px 20px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+        }
+
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-primary:hover { background: var(--primary-hover); box-shadow: 0 0 15px var(--accent-glow); }
+
+        .btn-success { background: var(--success); color: white; }
+        .btn-success:hover { background: var(--success-hover); }
+
+        .btn-secondary { background: var(--secondary); color: white; }
+        .btn-secondary:hover { background: var(--secondary-hover); }
+
+        .video-section {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .video-wrapper {
+            position: relative;
+            background: #000;
+            border-radius: 20px;
+            overflow: hidden;
+            aspect-ratio: 4 / 3;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .camera-overlay {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            pointer-events: none;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+        }
+
+        .camera-corner {
+            position: absolute;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 24px;
+        }
+        .top-left { top: 15px; left: 15px; }
+        .top-right { top: 15px; right: 15px; transform: rotate(90deg); }
+        .bottom-left { bottom: 15px; left: 15px; transform: rotate(-90deg); }
+        .bottom-right { bottom: 15px; right: 15px; transform: rotate(180deg); }
+
+        .result-box {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            padding: 20px;
+            border-radius: 16px;
+            font-size: 18px;
+            font-weight: 600;
+            border: 1px solid #e2e8f0;
+            transition: all 0.3s ease;
+        }
+
+        .status-waiting {
+            background: #f8fafc;
+            color: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="dashboard-container">
+        
+        <header class="main-header">
+            <h1>
+                <i class="fa-solid fa-hospital-user"></i>
+                Sistema di Accettazione Pazienti
+            </h1>
+            <span class="badge">Robot Medicale Attivo</span>
+        </header>
+
+        <div class="main-content">
+            
+            <!-- COLONNA SINISTRA -->
+            <aside class="sidebar">
+                <div class="card instructions">
+                    <h2>
+                        <i class="fa-solid fa-circle-info"></i>
+                        Come procedere
+                    </h2>
+                    <div class="step">
+                        <div class="step-number">1</div>
+                        <span>Posizionarsi davanti alla telecamera</span>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">2</div>
+                        <span>Premere "Riconosci Paziente"</span>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">3</div>
+                        <span>Premere "Esegui Check-in"</span>
+                    </div>
+                </div>
+
+                <div class="buttons-grid">
+                    <button id="identifyBtn" class="btn btn-primary">
+                        <i class="fa-solid fa-user-check"></i>
+                        Riconosci Paziente
+                    </button>
+                    <button id="checkinBtn" class="btn btn-success">
+                        <i class="fa-solid fa-calendar-check"></i>
+                        Esegui Check-in
+                    </button>
+                    <button id="resetBtn" class="btn btn-secondary">
+                        <i class="fa-solid fa-rotate-right"></i>
+                        Nuova Sessione
+                    </button>
+                </div>
+            </aside>
+
+            <!-- COLONNA DESTRA -->
+            <main class="video-section">
+                <div class="video-wrapper">
+                    <video id="video" autoplay playsinline></video>
+                    <div class="camera-overlay">
+                        <i class="fa-solid fa-expand camera-corner top-left"></i>
+                        <i class="fa-solid fa-expand camera-corner top-right"></i>
+                        <i class="fa-solid fa-expand camera-corner bottom-left"></i>
+                        <i class="fa-solid fa-expand camera-corner bottom-right"></i>
+                    </div>
+                </div>
+
+                <div id="result" class="result-box status-waiting">
+                    <i class="fa-solid fa-user-slash"></i>
+                    <span>Nessun paziente identificato</span>
+                </div>
+            </main>
+
+        </div>
+    </div>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>
