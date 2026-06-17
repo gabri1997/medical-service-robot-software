@@ -1,6 +1,7 @@
 import cv2
 import os 
 import pathlib
+import sqlite3
 import numpy as np
 from insightface.app import FaceAnalysis
 
@@ -130,13 +131,29 @@ def cam_recognition(
 
     return frames_best_label, frames_best_score
 
+def get_patient_info_from_db(db_path, patient_id):
+    connection = sqlite3.connect(db_path)
+    cursor = connection.cursor()
+    cursor.execute("SELECT name, surname FROM patients WHERE patient_id = ?", (patient_id,))
+    result = cursor.fetchone()
+    if result:
+        name, surname = result
+        print(f"Patient info from DB - ID: {patient_id}, Name: {name}, Surname: {surname}")
+        return name, surname
+    else:
+        print(f"No patient found in DB with ID: {patient_id}")
+        return None, None
+
+
 def identify_from_image(app, embedding, image):
     
     if image is None:
         print("No image provided for recognition.")
         return {
             "patient_id": None,
-            "score": 0.0
+            "score": 0.0,
+            "name": None,
+            "surname": None
         }
 
     # image arriva da gradio e deve essere un numpy array
@@ -145,7 +162,9 @@ def identify_from_image(app, embedding, image):
         print("No faces detected in the provided image.")
         return {
             "patient_id": None,
-            "score": 0.0
+            "score": 0.0,
+            "name": None,
+            "surname": None
         }
     face = max(
         faces,
@@ -168,9 +187,12 @@ def identify_from_image(app, embedding, image):
         }
     best_label = db_labels[best_idx]
     print(f"Best match: {best_label} with score {best_score:.2f}")
+    name, surname = get_patient_info_from_db("patient_data.db", best_label)
     return {
         "patient_id": str(best_label),
-        "score": float(best_score)
+        "score": float(best_score),
+        "name": name,
+        "surname": surname
     }
     
 

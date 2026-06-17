@@ -207,6 +207,7 @@ def execute_fetch_and_update(patient_id):
         "new_status": new_status,
         "timing": appointment_timing
     })
+    
     return {
         "success": True,
         "event": "appointment_updated",
@@ -214,7 +215,10 @@ def execute_fetch_and_update(patient_id):
             "patient_id": patient_id,
             "today_appointment": today_appointment,
             "timing": appointment_timing,
-            "new_status": new_status
+            "new_status": new_status,
+            "name" : name if name else None,
+            "surname" : surname if surname else None
+            
         }
     }
         

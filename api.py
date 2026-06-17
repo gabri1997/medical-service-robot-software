@@ -1,15 +1,22 @@
 from insightface.app import FaceAnalysis
 from cam_recognition import identify_from_image
 from fetch_api_patient_data import execute_fetch_and_update
+from text_recognition import execute_text_recognition
 from fastapi import Request
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 from fastapi import FastAPI, UploadFile, File
 import numpy as np
+from faster_whisper import WhisperModel
+from local_db_builder import db_creation
 from fastapi import UploadFile, File
 from PIL import Image
 import io
+import os
 import numpy as np
+global patient_id
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+db_file = os.path.join(BASE_DIR, 'patient_data.db')
 
 face_app = FaceAnalysis(
     name="buffalo_l",
@@ -20,15 +27,20 @@ face_app.prepare(
     ctx_id=0,
     det_size=(640, 640)
 )
-
+model = WhisperModel("small", device="cpu", compute_type="int8")
 DB = np.load(
     "db_local_embeddings/db_embeddings.npz"
 )
 
+if not os.path.exists(db_file):
+    db_creation(db_file)
+else:
+    print("Database già esistente, procedo con il riconoscimento del paziente ...")
+    
 patient_id = None
 
 app = FastAPI()
-
+print("API FILE LOADED")
 app.mount(
     "/static",
     StaticFiles(directory="static"),
@@ -59,7 +71,7 @@ async def identify(file: UploadFile = File(...)):
     )
 
     image = np.array(image)
-    
+
     print(f"Received image of shape: {image.shape}")
     print(f"Image dtype: {image.dtype}")
     
@@ -68,9 +80,12 @@ async def identify(file: UploadFile = File(...)):
         DB,
         image
     )
-
-    patient_id = result["patient_id"]
-
+    print(f"Identification result: {result}")
+    if result is not None:
+        patient_id = result["patient_id"]
+        name = result["name"]
+        surname = result["surname"]
+        print(f"Identified patient ID: {patient_id}, Name: {name}, Surname: {surname}")
     return result
 
 
@@ -88,3 +103,40 @@ def checkin():
     return execute_fetch_and_update(
         patient_id
     )
+
+@app.post("/reset")
+def reset():
+
+    global patient_id
+    patient_id = None
+
+    return {
+        "success": True,
+        "message": "Stato resettato"
+    }   
+
+@app.post("/voice-identify")
+async def voice_identify(
+    file: UploadFile = File(...)
+):
+
+    audio_bytes = await file.read()
+
+    with open(
+        "temp_audio.webm",
+        "wb"
+    ) as f:
+
+        f.write(audio_bytes)
+
+    patient_id, name, surname = execute_text_recognition(
+        "temp_audio.webm",
+        model,
+        db_file
+    )
+    print(f"Identified patient ID: {patient_id}, Name: {name}, Surname: {surname}")
+    return {
+        "patient_id": patient_id,
+        "name": name,
+        "surname": surname
+    }

@@ -52,13 +52,27 @@ def search_patient_in_local_db(normalized_name, db_flile):
             patient_id = db_patient_id
     return patient_id
 
+def get_patient_info_from_db(db_path, patient_id):
+    connection = sqlite3.connect(db_path)
+    cursor = connection.cursor()
+    cursor.execute("SELECT name, surname FROM patients WHERE patient_id = ?", (patient_id,))
+    result = cursor.fetchone()
+    if result:
+        name, surname = result
+        print(f"Patient info from DB - ID: {patient_id}, Name: {name}, Surname: {surname}")
+        return name, surname
+    else:
+        print(f"No patient found in DB with ID: {patient_id}")
+        return None, None
+
 def execute_text_recognition(audio_pth, model, db_file):
     segments = recognizer(audio_pth, model)
     full_text = " ".join(s.text for s in segments)
     normalized_name = text_normalization(full_text)
     print(f"Ecco il nome del paziente che ho riconosciuto: {normalized_name}")
     patient_id = search_patient_in_local_db(normalized_name, db_file)
-    return patient_id
+    name, surname = get_patient_info_from_db(db_file, patient_id)
+    return patient_id, name, surname
 
 if __name__ == '__main__':
 

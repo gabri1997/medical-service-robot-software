@@ -223,6 +223,30 @@
             background: #f8fafc;
             color: var(--text-muted);
         }
+        .loading-hidden {
+            display: none;
+        }
+
+        .loading-visible {
+            display: block;
+            text-align: center;
+            margin-top: 20px;
+            font-size: 20px;
+            color: #51aa09;
+        }
+
+        .loading-visible i {
+            margin-right: 10px;
+        }
+        #voiceSection {
+            margin-top: 20px;
+        }
+        #voiceSection p {
+            color: var(--text-muted);
+            line-height: 1.5;
+            margin-bottom: 20px;
+        }
+
     </style>
 </head>
 <body>
@@ -269,10 +293,31 @@
                         <i class="fa-solid fa-calendar-check"></i>
                         Esegui Check-in
                     </button>
-                    <button id="resetBtn" class="btn btn-secondary">
-                        <i class="fa-solid fa-rotate-right"></i>
-                        Nuova Sessione
-                    </button>
+                </div>
+                    
+                <div
+                    id="voiceSection"
+                    class="card"
+                    style="display:none;"
+                >
+                 <h2>
+                    <i class="fa-solid fa-microphone"></i>
+                    Riconoscimento vocale
+                </h2>
+
+                <p>
+                    Non è stato possibile riconoscere il volto.
+                    Pronunciare nome e cognome.
+                </p>
+
+                <button
+                    id="startRecordingBtn"
+                    class="btn btn-primary"
+                >
+                    <i class="fa-solid fa-microphone"></i>
+                    Avvia registrazione
+                </button>
+
                 </div>
             </aside>
 
@@ -288,13 +333,18 @@
                     </div>
                 </div>
 
-                <div id="result" class="result-box status-waiting">
-                    <i class="fa-solid fa-user-slash"></i>
-                    <span>Nessun paziente identificato</span>
-                </div>
+                <div id="loading" class="loading-hidden">
+                <i class="fa-solid fa-spinner fa-spin"></i>
+                Riconoscimento in corso...
+            </div>
+
+            <div id="result">
+                Nessun paziente identificato
+            </div>
             </main>
 
         </div>
+       
     </div>
 
     <script src="/static/app.js"></script>
