@@ -36,14 +36,17 @@ face_app = FaceAnalysis(
     providers=["CPUExecutionProvider"]
 )
 
+TEMP_AUDIO_FILE = os.path.join(
+    BASE_DIR,
+    "temp_audio.webm"
+)
+
 face_app.prepare(
     ctx_id=0,
     det_size=(640, 640)
 )
 model = WhisperModel("base", device="cpu", compute_type="int8")
-DB = np.load(
-    "db_local_embeddings/db_embeddings.npz"
-)
+
 
 if not os.path.exists(DB_FILE):
     db_creation(DB_FILE)
@@ -54,14 +57,24 @@ patient_id = None
 
 app = FastAPI()
 print("API FILE LOADED")
+STATIC_DIR = os.path.join(
+    BASE_DIR,
+    "static"
+)
+
+TEMPLATES_DIR = os.path.join(
+    BASE_DIR,
+    "templates"
+)
+
 app.mount(
     "/static",
-    StaticFiles(directory="static"),
+    StaticFiles(directory=STATIC_DIR),
     name="static"
 )
 
 templates = Jinja2Templates(
-    directory="templates"
+    directory=TEMPLATES_DIR
 )
 
 @app.get("/")
@@ -136,14 +149,14 @@ async def voice_identify(
     audio_bytes = await file.read()
 
     with open(
-        "temp_audio.webm",
+        TEMP_AUDIO_FILE,
         "wb"
     ) as f:
 
         f.write(audio_bytes)
     t0 = time.time()
     patient_id, name, surname = execute_text_recognition(
-        "temp_audio.webm",
+        TEMP_AUDIO_FILE,
         model,
         DB_FILE
     )
