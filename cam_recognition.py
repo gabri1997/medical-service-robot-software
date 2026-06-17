@@ -21,6 +21,20 @@ Quando devo fermarmi?
  Se ho più volti nello stesso frame:
     quale scelgo?
 """
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+DB_FILE = os.path.join(
+    BASE_DIR,
+    "patient_data.db"
+)
+
+EMBEDDINGS_FILE = os.path.join(
+    BASE_DIR,
+    "db_local_embeddings",
+    "db_embeddings.npz"
+)
+
+DB = np.load(EMBEDDINGS_FILE)
 
 # qua definisco quanti frames devo processare, leggo massimo 120 frames e ne analizzo solo 1/3, quindi 40
 # ma se trovo un frame con score alto con score di almeno 0.72 mi fermo subito
@@ -189,7 +203,7 @@ def identify_from_image(app, embedding, image):
         }
     best_label = db_labels[best_idx]
     print(f"Best match: {best_label} with score {best_score:.2f}")
-    name, surname = get_patient_info_from_db("patient_data.db", best_label)
+    name, surname = get_patient_info_from_db(DB_FILE,best_label)
     return {
         "patient_id": str(best_label),
         "score": float(best_score),
@@ -200,8 +214,17 @@ def identify_from_image(app, embedding, image):
 
 if __name__ == "__main__":
 
-    db_embeddings_path = os.path.join('db_local_embeddings')
-    cap = cv2.VideoCapture("test_video2.mp4")
+    db_embeddings_path = os.path.join(
+    BASE_DIR,
+        "db_local_embeddings"
+    )
+
+    video_path = os.path.join(
+        BASE_DIR,
+        "test_video2.mp4"
+    )
+
+    cap = cv2.VideoCapture(video_path)
     app = FaceAnalysis(name="buffalo_l", providers=["CPUExecutionProvider"])
     best_label, best_score = cam_recognition(app, db_embeddings_path, cap, debug_frames="debug_frames")
     print(f"Best match: {best_label} with score {best_score:.2f}")      

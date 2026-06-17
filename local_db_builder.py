@@ -80,7 +80,14 @@ def db_creation(db_path):
    
 
 if __name__ == '__main__':
-    connection , cursor = db_setup()
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+    DB_FILE = os.path.join(
+        BASE_DIR,
+        "patient_data.db"
+    )
+
+    connection, cursor = db_setup(DB_FILE)
     # test_connection() # questa funzione serve solo per testare se la connessione al db funziona e se riesco a creare la tabella e inserire dati, la commento dopo averla testata
     populate_db(connection, cursor, get_patients_from_API(API_KEY, PRACTICE_ID, ARCHIVE_ID)) # questa funzione serve per popolare il db con i dati dei pazienti ottenuti dall'API, la implemento dopo
     connection.close()

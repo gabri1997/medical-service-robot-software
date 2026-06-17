@@ -51,8 +51,8 @@ def search_patient_in_local_db(normalized_name, db_flile):
             best_score = score
             patient_id = db_patient_id
         
-        if best_score < 0.5: # se la similarità è maggiore o uguale a 0.8 consideriamo il paziente identificato, altrimenti consideriamo che non siamo riusciti a identificare il paziente
-            patient_id = None
+    if best_score < 0.5: # se la similarità è maggiore o uguale a 0.8 consideriamo il paziente identificato, altrimenti consideriamo che non siamo riusciti a identificare il paziente
+        patient_id = None
 
     print(f"Best match in local DB: Patient ID {patient_id} with similarity score {best_score:.2f}")
     return patient_id

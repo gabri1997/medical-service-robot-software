@@ -18,8 +18,19 @@ import time
 
 global patient_id
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-db_file = os.path.join(BASE_DIR, 'patient_data.db')
 
+DB_FILE = os.path.join(
+    BASE_DIR,
+    "patient_data.db"
+)
+
+EMBEDDINGS_FILE = os.path.join(
+    BASE_DIR,
+    "db_local_embeddings",
+    "db_embeddings.npz"
+)
+
+DB = np.load(EMBEDDINGS_FILE)
 face_app = FaceAnalysis(
     name="buffalo_l",
     providers=["CPUExecutionProvider"]
@@ -34,8 +45,8 @@ DB = np.load(
     "db_local_embeddings/db_embeddings.npz"
 )
 
-if not os.path.exists(db_file):
-    db_creation(db_file)
+if not os.path.exists(DB_FILE):
+    db_creation(DB_FILE)
 else:
     print("Database già esistente, procedo con il riconoscimento del paziente ...")
     
@@ -134,7 +145,7 @@ async def voice_identify(
     patient_id, name, surname = execute_text_recognition(
         "temp_audio.webm",
         model,
-        db_file
+        DB_FILE
     )
     print(f"Tempo totale: {time.time()-t0:.2f}s")
     print(f"Identified patient ID: {patient_id}, Name: {name}, Surname: {surname}")
