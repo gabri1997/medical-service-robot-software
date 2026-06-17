@@ -14,6 +14,8 @@ from PIL import Image
 import io
 import os
 import numpy as np
+import time 
+
 global patient_id
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 db_file = os.path.join(BASE_DIR, 'patient_data.db')
@@ -27,7 +29,7 @@ face_app.prepare(
     ctx_id=0,
     det_size=(640, 640)
 )
-model = WhisperModel("small", device="cpu", compute_type="int8")
+model = WhisperModel("base", device="cpu", compute_type="int8")
 DB = np.load(
     "db_local_embeddings/db_embeddings.npz"
 )
@@ -119,7 +121,7 @@ def reset():
 async def voice_identify(
     file: UploadFile = File(...)
 ):
-
+    global patient_id
     audio_bytes = await file.read()
 
     with open(
@@ -128,12 +130,13 @@ async def voice_identify(
     ) as f:
 
         f.write(audio_bytes)
-
+    t0 = time.time()
     patient_id, name, surname = execute_text_recognition(
         "temp_audio.webm",
         model,
         db_file
     )
+    print(f"Tempo totale: {time.time()-t0:.2f}s")
     print(f"Identified patient ID: {patient_id}, Name: {name}, Surname: {surname}")
     return {
         "patient_id": patient_id,

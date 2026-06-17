@@ -9,7 +9,7 @@ def recognizer(audio_pth, model):
 
     print("Modello caricato")
     audio_path = os.path.join(os.path.dirname(__file__), audio_pth)
-    segments, info = model.transcribe(audio_path, beam_size=5)
+    segments, info = model.transcribe(audio_path, language="it", beam_size=5)
     
     return segments
 
@@ -50,6 +50,11 @@ def search_patient_in_local_db(normalized_name, db_flile):
         if score > best_score:
             best_score = score
             patient_id = db_patient_id
+        
+        if best_score < 0.5: # se la similarità è maggiore o uguale a 0.8 consideriamo il paziente identificato, altrimenti consideriamo che non siamo riusciti a identificare il paziente
+            patient_id = None
+
+    print(f"Best match in local DB: Patient ID {patient_id} with similarity score {best_score:.2f}")
     return patient_id
 
 def get_patient_info_from_db(db_path, patient_id):
