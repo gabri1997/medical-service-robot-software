@@ -183,7 +183,9 @@ def identify_from_image(app, embedding, image):
         print(f"Low confidence score: {best_score:.2f}. No reliable match found.")
         return {
             "patient_id": None,
-            "score": best_score
+            "score": best_score,
+            "name": None,
+            "surname": None
         }
     best_label = db_labels[best_idx]
     print(f"Best match: {best_label} with score {best_score:.2f}")

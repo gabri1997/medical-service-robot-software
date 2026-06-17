@@ -219,7 +219,17 @@ async function sendAudioToBackend(audioBlob) {
                 <h2><i class="fa-solid fa-circle-xmark"></i> Paziente non riconosciuto</h2>
                 <p>Nessuna corrispondenza trovata. Riprova o contatta il personale.</p>
             `;
-        }
+            const popup =
+                document.getElementById(
+                    "warningPopup"
+                );
+
+            popup.classList.add("show");
+
+            setTimeout(() => {
+                popup.classList.remove("show");
+            }, 6000);
+                    }
 
     } catch (error) {
         console.error(error);

@@ -5,23 +5,30 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Medical Service Robot</title>
     
-    <!-- Link per le Icone (FontAwesome) -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 
-    <!-- CSS Integrato per non perdere gli stili -->
     <style>
         :root {
-            --bg-color: #f0f4f8;
+            /* Palette Chiara e Tenue (Medical/Clean) */
+            --bg-color: #f4f7f9;
             --card-bg: #ffffff;
-            --text-main: #1e293b;
+            --text-main: #334155;
             --text-muted: #64748b;
-            --primary: #2b5caa;
-            --primary-hover: #778ece;
-            --success: #07744f;
-            --success-hover: #06b180;
-            --secondary: #64748b;
-            --secondary-hover: #475569;
-            --accent-glow: rgba(59, 130, 246, 0.15);
+            
+            /* Colori primari desaturati ed eleganti */
+            --primary: #639fab;
+            --primary-hover: #528894;
+            --primary-light: #eef6f8;
+            
+            --success: #76b041;
+            --success-hover: #659a35;
+            --success-light: #f1f9ec;
+            
+            --secondary: #94a3b8;
+            --secondary-hover: #78889b;
+            
+            --border-color: #e2e8f0;
+            --shadow-subtle: 0 10px 30px rgba(148, 163, 184, 0.08);
         }
 
         body {
@@ -29,108 +36,148 @@
             background-color: var(--bg-color);
             color: var(--text-main);
             margin: 0;
-            padding: 20px;
+            padding: 24px;
             min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
+            -webkit-font-smoothing: antialiased;
         }
 
         .dashboard-container {
             width: 100%;
-            max-width: 1200px;
+            max-width: 1140px;
             background: var(--card-bg);
-            border-radius: 24px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.04);
-            padding: 30px;
+            border-radius: 20px;
+            box-shadow: var(--shadow-subtle);
+            padding: 40px;
             box-sizing: border-box;
+            border: 1px solid rgba(226, 232, 240, 0.8);
         }
 
         .main-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border-bottom: 2px solid #e2e8f0;
-            padding-bottom: 20px;
-            margin-bottom: 25px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 24px;
+            margin-bottom: 32px;
         }
 
         .main-header h1 {
-            font-size: 24px;
+            font-size: 22px;
+            font-weight: 600;
             margin: 0;
             color: var(--text-main);
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 14px;
+            letter-spacing: -0.5px;
         }
 
         .main-header h1 i {
             color: var(--primary);
+            background: var(--primary-light);
+            padding: 10px;
+            border-radius: 12px;
+            font-size: 18px;
         }
 
         .badge {
-            background: #dbeafe;
-            color: #3f2d6e;
-            padding: 6px 14px;
-            border-radius: 50px;
+            background: var(--primary-light);
+            color: var(--primary);
+            padding: 6px 16px;
+            border-radius: 30px;
             font-weight: 600;
             font-size: 13px;
-            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .badge::before {
+            content: '';
+            width: 8px;
+            height: 8px;
+            background: var(--primary);
+            border-radius: 50%;
+            display: inline-block;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(0.95); opacity: 0.5; }
+            50% { transform: scale(1.1); opacity: 1; }
+            100% { transform: scale(0.95); opacity: 0.5; }
         }
 
         .main-content {
             display: grid;
-            grid-template-columns: 1fr 1.4fr;
-            gap: 30px;
+            grid-template-columns: 1fr 1.3fr;
+            gap: 40px;
         }
 
         @media (max-width: 900px) {
             .main-content {
                 grid-template-columns: 1fr;
+                gap: 30px;
             }
+            .dashboard-container { padding: 24px; }
         }
 
         .card {
-            background: #f8fafc;
-            border: 1px solid #e2e8f0;
+            background: #ffffff;
+            border: 1px solid var(--border-color);
             border-radius: 16px;
             padding: 24px;
-            margin-bottom: 20px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.01);
         }
 
         .card h2 {
-            font-size: 18px;
+            font-size: 16px;
+            font-weight: 600;
             margin-top: 0;
             margin-bottom: 20px;
             display: flex;
             align-items: center;
             gap: 10px;
             color: var(--text-main);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
         .step {
             display: flex;
             align-items: center;
-            gap: 15px;
-            padding: 14px;
-            background: var(--card-bg);
-            border: 1px solid #e2e8f0;
+            gap: 16px;
+            padding: 14px 18px;
+            background: #f8fafc;
+            border: 1px solid var(--border-color);
             border-radius: 12px;
             margin-bottom: 12px;
-            font-weight: 500;
+            font-size: 14px;
+            color: var(--text-main);
+            transition: all 0.2s ease;
+        }
+        
+        .step:hover {
+            border-color: var(--primary);
+            background: var(--primary-light);
         }
 
         .step-number {
             background: var(--primary);
             color: white;
-            width: 28px;
-            height: 28px;
+            width: 24px;
+            height: 24px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 14px;
-            font-weight: bold;
+            font-size: 12px;
+            font-weight: 600;
+            flex-shrink: 0;
         }
 
         .buttons-grid {
@@ -142,44 +189,53 @@
         .btn {
             border: none;
             border-radius: 12px;
-            padding: 16px 20px;
-            font-size: 16px;
+            padding: 16px 24px;
+            font-size: 15px;
             font-weight: 600;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 10px;
-            transition: all 0.2s ease;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            transition: all 0.25s ease;
         }
 
         .btn:active {
-            transform: scale(0.98);
+            transform: scale(0.99);
         }
 
-        .btn-primary { background: var(--primary); color: white; }
-        .btn-primary:hover { background: var(--primary-hover); box-shadow: 0 0 15px var(--accent-glow); }
+        .btn-primary { 
+            background: var(--primary); 
+            color: white; 
+        }
+        .btn-primary:hover { 
+            background: var(--primary-hover); 
+            box-shadow: 0 4px 12px rgba(99, 159, 171, 0.2);
+        }
 
-        .btn-success { background: var(--success); color: white; }
-        .btn-success:hover { background: var(--success-hover); }
-
-        .btn-secondary { background: var(--secondary); color: white; }
-        .btn-secondary:hover { background: var(--secondary-hover); }
+        .btn-success { 
+            background: var(--success); 
+            color: white; 
+        }
+        .btn-success:hover { 
+            background: var(--success-hover); 
+            box-shadow: 0 4px 12px rgba(118, 176, 65, 0.2);
+        }
 
         .video-section {
             display: flex;
             flex-direction: column;
-            gap: 20px;
+            gap: 24px;
         }
 
         .video-wrapper {
             position: relative;
-            background: #000;
-            border-radius: 20px;
+            background: #1e293b;
+            border-radius: 16px;
             overflow: hidden;
             aspect-ratio: 4 / 3;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            border: 1px solid var(--border-color);
         }
 
         video {
@@ -192,59 +248,80 @@
             position: absolute;
             top: 0; left: 0; right: 0; bottom: 0;
             pointer-events: none;
-            border: 2px solid rgba(255, 255, 255, 0.1);
-            border-radius: 20px;
         }
 
         .camera-corner {
             position: absolute;
-            color: rgba(255, 255, 255, 0.6);
-            font-size: 24px;
+            color: rgba(255, 255, 255, 0.4);
+            font-size: 20px;
         }
-        .top-left { top: 15px; left: 15px; }
-        .top-right { top: 15px; right: 15px; transform: rotate(90deg); }
-        .bottom-left { bottom: 15px; left: 15px; transform: rotate(-90deg); }
-        .bottom-right { bottom: 15px; right: 15px; transform: rotate(180deg); }
+        .top-left { top: 20px; left: 20px; }
+        .top-right { top: 20px; right: 20px; transform: rotate(90deg); }
+        .bottom-left { bottom: 20px; left: 20px; transform: rotate(-90deg); }
+        .bottom-right { bottom: 20px; right: 20px; transform: rotate(180deg); }
 
-        .result-box {
+        /* Scatole di Stato */
+        #result {
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 12px;
-            padding: 20px;
-            border-radius: 16px;
-            font-size: 18px;
+            padding: 16px;
+            border-radius: 12px;
+            font-size: 15px;
             font-weight: 600;
-            border: 1px solid #e2e8f0;
-            transition: all 0.3s ease;
-        }
-
-        .status-waiting {
+            border: 1px solid var(--border-color);
             background: #f8fafc;
             color: var(--text-muted);
+            text-align: center;
         }
+
         .loading-hidden {
             display: none;
         }
 
-        .loading-visible {
-            display: block;
-            text-align: center;
-            margin-top: 20px;
-            font-size: 20px;
-            color: #51aa09;
+        #loading:not(.loading-hidden) {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 16px;
+            background: var(--primary-light);
+            color: var(--primary);
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 600;
+            border: 1px solid rgba(99, 159, 171, 0.2);
         }
 
-        .loading-visible i {
-            margin-right: 10px;
-        }
-        #voiceSection {
-            margin-top: 20px;
-        }
         #voiceSection p {
             color: var(--text-muted);
-            line-height: 1.5;
+            line-height: 1.6;
+            font-size: 14px;
             margin-bottom: 20px;
+        }
+
+        .warning-popup {
+            display: none;
+            margin-top: 10px;
+            padding: 16px;
+            background-color: #fef3c7;
+            border: 1px solid #fde68a;
+            color: #b45309;
+            font-size: 15px;
+            font-weight: 600;
+            text-align: center;
+            border-radius: 12px;
+        }
+
+        .warning-popup.show {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
     </style>
@@ -263,7 +340,6 @@
 
         <div class="main-content">
             
-            <!-- COLONNA SINISTRA -->
             <aside class="sidebar">
                 <div class="card instructions">
                     <h2>
@@ -295,33 +371,22 @@
                     </button>
                 </div>
                     
-                <div
-                    id="voiceSection"
-                    class="card"
-                    style="display:none;"
-                >
-                 <h2>
-                    <i class="fa-solid fa-microphone"></i>
-                    Riconoscimento vocale
-                </h2>
-
-                <p>
-                    Non è stato possibile riconoscere il volto.
-                    Pronunciare nome e cognome.
-                </p>
-
-                <button
-                    id="startRecordingBtn"
-                    class="btn btn-primary"
-                >
-                    <i class="fa-solid fa-microphone"></i>
-                    Avvia registrazione
-                </button>
-
+                <div id="voiceSection" class="card" style="display:none;">
+                    <h2>
+                        <i class="fa-solid fa-microphone"></i>
+                        Riconoscimento vocale
+                    </h2>
+                    <p>
+                        Se non è stato possibile riconoscere il volto, <br>
+                        si prega di pronunciare nome e cognome.
+                    </p>
+                    <button id="startRecordingBtn" class="btn btn-primary">
+                        <i class="fa-solid fa-microphone"></i>
+                        Avvia registrazione
+                    </button>
                 </div>
             </aside>
 
-            <!-- COLONNA DESTRA -->
             <main class="video-section">
                 <div class="video-wrapper">
                     <video id="video" autoplay playsinline></video>
@@ -334,13 +399,18 @@
                 </div>
 
                 <div id="loading" class="loading-hidden">
-                <i class="fa-solid fa-spinner fa-spin"></i>
-                Riconoscimento in corso...
-            </div>
+                    <i class="fa-solid fa-spinner fa-spin"></i>
+                    Riconoscimento in corso...
+                </div>
 
-            <div id="result">
-                Nessun paziente identificato
-            </div>
+                <div id="result">
+                    Nessun paziente identificato
+                </div>
+                
+                <div id="warningPopup" class="warning-popup">
+                    <i class="fa-solid fa-circle-exclamation" style="margin-right: 8px;"></i>
+                    Accomodati in sala d'attesa, l'area operativa è stata avvisata.
+                </div>
             </main>
 
         </div>
