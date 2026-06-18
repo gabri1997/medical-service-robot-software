@@ -13,7 +13,7 @@ from fastapi import UploadFile, File
 from PIL import Image
 import io
 import os
-import numpy as np
+from scheduler import scheduler, nightly_refresh
 import time 
 
 global patient_id
@@ -55,7 +55,26 @@ else:
     
 patient_id = None
 
+
+def reload_embeddings():
+    global DB
+    DB = np.load(EMBEDDINGS_FILE)
+    print("Embeddings reloaded")
+
+def nightly_job():
+    nightly_refresh()
+    reload_embeddings()
+ 
+scheduler.add_job(
+    nightly_job,
+    trigger="cron",
+    hour=2,
+    minute=0
+)
+print("Nightly refresh scheduled at 02:00 Europe/Rome")
+scheduler.start()
 app = FastAPI()
+
 print("API FILE LOADED")
 STATIC_DIR = os.path.join(
     BASE_DIR,
