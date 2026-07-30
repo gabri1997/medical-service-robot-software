@@ -227,3 +227,9 @@ config.py
 audio/
 n8n_data/
 patient_data.db
+
+patient_data.db
+*.db
+*.webm
+*.mp3
+audio/
